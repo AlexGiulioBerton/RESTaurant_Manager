@@ -1,11 +1,26 @@
 {
     "name": "RESTaurantmanager_server",
-    "author": {
-        "name": "Alex Giulio Berton"
-    },
+    "author": "Alex Giulio Berton",
     "version": "0.0.1",
-    "private": true,
     "dependencies": {
-        "express": "^4.18.2"
-    }
+        "colors": "^1.4.0",
+        "cors": "^2.8.5",
+        "express": "^4.18.2",
+        "express-jwt": "^8.4.1",
+        "mongoose": "^7.3.4",
+        "passport": "^0.6.0",
+        "passport-http": "^0.3.0"
+    },
+    "devDependencies": {
+        "@types/express": "^4.17.11",
+        "@types/jsonwebtoken": "^8.5.1",
+        "@types/node": "^13.13.51",
+        "@types/passport": "^1.0.6",
+        "typescript": "^5.0.0"
+    },
+    "scripts": {
+        "compile": "tsc",
+        "start": "node server.js"
+    },
+    "private": true
 }
