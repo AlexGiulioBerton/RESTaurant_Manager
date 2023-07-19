@@ -5,8 +5,8 @@ EXPOSE 8080
 
 WORKDIR /app
 COPY . /app
-# RUN npm install
-# RUN npm run compile
+RUN npm install
+RUN npm run compile
 
-# CMD node postmessages
+# CMD node server
 
