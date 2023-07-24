@@ -17,26 +17,12 @@
  *       /orders/:id                    _                 DELETE          Delete an order by id
  *       /orders/:id/status             _                 PUT             Update the status of an order given its id
  * 
+ *       /users                         _                 POST            Post a new user
+ *       /users/:id                     _                 GET             Retrive all the user info given its id
+ *       /users/:id                     _                 DELETE          Delete a user given its id
+ * 
  *       /login                         _                 POST            Login an existing user, returning a JWT
  */
-
-
-import * as user from './models/Users';
-import * as dish from './models/Dishes';
-import * as drink from './models/Drinks';
-import * as table from './models/Tables';
-import colors = require('colors');
-import http = require('http');                  // HTTP module
-import mongoose = require('mongoose');
-import express = require('express');
-import passport = require('passport');           // authentication middleware for Express
-import passportHTTP = require('passport-http');  // implements Basic and Digest authentication for HTTP (used for /login endpoint)
-import jsonwebtoken = require('jsonwebtoken');  // JWT generation
-import cors = require('cors');                  // Enable CORS middleware
-const io = require('socket.io');               // Socket.io websocket library
-const { expressjwt: jwt } = require('express-jwt');            // JWT parsing middleware for express
-colors.enabled = true;
-
 const result = require('dotenv').config();          // dotenv module will load the file named '.env' and all the key-value
                                                     // pairs into process.env environment variable
 
@@ -55,19 +41,44 @@ if( !process.env.PORT ) {
     process.exit(-1);
 }
 
-const auth = null;
+import * as user from './models/Users';
+import * as dish from './models/Dishes';
+import * as drink from './models/Drinks';
+import * as table from './models/Tables';
+import * as order from './models/Orders';
+import colors = require('colors');
+import bodyParser = require('body-parser');
+import http = require('http');                  // HTTP module
+import mongoose = require('mongoose');
+import express = require('express');
+import passport = require('passport');           // authentication middleware for Express
+import passportHTTP = require('passport-http');  // implements Basic and Digest authentication for HTTP (used for /login endpoint)
+import jsonwebtoken = require('jsonwebtoken');  // JWT generation
+import cors = require('cors');                  // Enable CORS middleware
+const io = require('socket.io');               // Socket.io websocket library
+const { expressjwt: jwt } = require('express-jwt');            // JWT parsing middleware for express
+colors.enabled = true;
+
+/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+let auth = jwt( {
+    secret: process.env.JWT_SECRET, 
+    algorithms: ["HS256"]
+});
+
 let ios = undefined;
 let app = express();
 
 app.use(cors());
 app.use(express.json());
-
-//app.listen(8080);
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended:true}));
 
 app.use(function (req, _, next) {
     console.log("===============================================".inverse);
     console.log("New request for: " + req.url);
     console.log("Method: " + req.method);
+    console.log(("Time: " + new Date()).gray);
     console.log();
     next();
 });
@@ -82,12 +93,13 @@ app.use(function (req, _, next) {
 
  Endpoint: /
 */
-app.get("/", function(_, res) {
-    res.status(200).json( {
-        api_version: "1.0",
-        endpoints: ["/orders", "/grande", "/login"]
+app.get("/", (req,res) => {
+    res.status(200).json( { 
+        api_version: "1.0", 
+        endpoints: [ "/orders", "/", "/", "/login" ] 
     } );
 });
+
 
 /*
          __                _               
@@ -99,28 +111,360 @@ app.get("/", function(_, res) {
                                         
  Endpoint: /orders                                      
 */
-/*
-app.route("/orders").get(auth, (req, res, next) => {
-    let filter = {};
-    if( req.query.tags ) {
-        filter = { tags: {$all: req.query.tags } };
-    }
-    console.log("Using filter: " + JSON.stringify(filter) );
-    console.log(" Using query: " + JSON.stringify(req.query) );
 
-    return res.status(200).json( "ciao:test" );
-}).post(auth, (req, res, next) => {
-    return res.status(200).json( "ciao:test" );
-}).put(auth, (req, res, next) => {
-    return res.status(200).json( "ciao:test" );
-}).delete(auth, (req, res, next) => {
-    return res.status(200).json( "ciao:test" );
+app.get('/orders', (req, res, next) => {
+    let skip = parseInt( req.query.skip as string || "0" ) || 0;
+    let limit = parseInt( req.query.limit as string || "20" ) || 20;
+
+    order.getModel().find( { } ).sort({timestamp:-1}).skip( skip ).limit( limit ).then( (documents) => {
+        return res.status(200).json( documents );
+    }).catch( (reason) => {
+        return next({ statusCode:404, error: true, errormessage: "DB error: "+reason });
+    });
 });
+
+/*
+         __                          
+        / /                          
+       / /   _   _ ___  ___ _ __ ___ 
+      / /   | | | / __|/ _ \ '__/ __|
+     / /    | |_| \__ \  __/ |  \__ \
+    /_/      \__,_|___/\___|_|  |___/
+
+    Endpoint: users
 */
 
-/* Other API goes here */
+app.post('/users', /* auth, */(req, res, next) => {
+    user.getModel().find({username: req.body.username}).count().then(
+        (count) => {
+            if (count == 0) {
+                let u = user.newUser(req.body);
+
+                if( !req.body.password ) {
+                    return next({ statusCode:404, error: true, errormessage: "Password field missing"} );
+                }
+
+                u.setPassword(req.body.password);
+
+                u.save().then(
+                    (data) => {
+                        console.log("User added to the db".green);
+                        return res.status(200).json({error: false, errormessage: "", id: data._id})
+                    }
+                ).catch(
+                    (reason) => {
+                        return next({ statusCode:404, error: true, errormessage: "DB error: "+reason.errmsg });
+                    }
+                );
+            } else {
+                console.log("User already exists inside db".red);
+                return next({statusCode:404, error:true, errormessage: "User already exists"} );
+            }
+        }
+    );
+});
+
+app.get('/users/:username',/* auth, */(req, res, next) => {
+    let usrn = req.params.username;
+
+    user.getModel().find( { username: usrn } ).then(
+        (result) => {
+            return res.status(200).json( result );
+        }
+    ).catch(
+        (reason) => {
+            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason });
+        }
+    );
+});
+
+app.delete('/users/:username', /*auth, */(req, res, next) => {
+    let usrn = req.params.username;
+
+    user.getModel().deleteOne({username: usrn}).then(
+        ( q ) => {
+            if( q.deletedCount > 0 )
+                return res.status(200).json( {error:false, errormessage:""} );
+            else 
+                return res.status(404).json( {error:true, errormessage:"Invalid username"} );
+        }
+    ).catch( 
+        (reason)=> {
+            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason });
+        }
+    );
+});
+
+/*
+         __      _ _     _               
+        / /     | (_)   | |              
+       / /    __| |_ ___| |__   ___  ___ 
+      / /    / _` | / __| '_ \ / _ \/ __|
+     / /    | (_| | \__ \ | | |  __/\__ \
+    /_/      \__,_|_|___/_| |_|\___||___/
+                                        
+    Endpoint: dishes
+*/
+app.get('/dishes/:id?', /*auth, */(req, res, next) => {
+    if (req.params.id) {
+        let id = req.params.id;
+        dish.getModel().find( {_id: id } ).then(
+            (result) => { return res.status(200).json( result ); }
+        ).catch( 
+            (reason) => { return next({ statusCode:404, error: true, errormessage: "DB error: "+reason }); }
+        )
+    } else {
+        let category;
+        if (req.query.category) category = req.query.category;
+        
+        let skip = parseInt( req.query.skip as string || "0" ) || 0;
+        let limit = parseInt( req.query.limit as string || "20" ) || 20;
+        
+        dish.getModel().find( (category) ? { menuCategory: category } : { } ).limit(limit).skip(skip).then(
+            (result) => { return res.status(200).json( result ); }
+        ).catch( 
+            (reason) => { return next({ statusCode:404, error: true, errormessage: "DB error: "+reason }); }
+        )
+    }
+});
+
+app.post('/dishes', /*auth, */(req, res, next) => {
+    let new_dish = dish.newDish(req.body);
+
+    new_dish.save().then(
+        (data) => {
+            console.log("Dish added to the db".green);
+            return res.status(200).json({error: false, errormessage: "", id: data._id})
+        }
+    ).catch(
+        (reason) => {
+            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason.errmsg });
+        }
+    );
+});
+
+app.delete('/dishes/:id', /*auth, */(req, res, next) => {
+    let id = req.params.id;
+
+    dish.getModel().deleteOne( {_id: id } ).then( 
+        ( q ) => {
+          if( q.deletedCount > 0 ) 
+            return res.status(200).json( {error:false, errormessage:""} );
+
+          else 
+            return res.status(404).json( {error:true, errormessage:"Invalid dish ID"} );
+        }
+    ).catch( 
+        (reason)=> {
+            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason });
+        }
+    )
+});
 
 
+/*
+         __      _      _       _        
+        / /     | |    (_)     | |       
+       / /    __| |_ __ _ _ __ | | _____ 
+      / /    / _` | '__| | '_ \| |/ / __|
+     / /    | (_| | |  | | | | |   <\__ \
+    /_/      \__,_|_|  |_|_| |_|_|\_\___/
+
+    Endpoint: drinks
+*/
+app.get('/drinks/:id?', /*auth, */(req, res, next) => {
+    if (req.params.id) {
+        let id = req.params.id;
+        
+        drink.getModel().find( {_id: id } ).then(
+            (result) => { return res.status(200).json( result ); }
+        ).catch( 
+            (reason) => { return next({ statusCode:404, error: true, errormessage: "DB error: "+reason }); }
+        )
+    } else {
+        let category;
+        if (req.query.category) category = req.query.category;
+        
+        let skip = parseInt( req.query.skip as string || "0" ) || 0;
+        let limit = parseInt( req.query.limit as string || "20" ) || 20;
+        
+        drink.getModel().find( (category) ? { menuCategory: category } : { } ).limit(limit).skip(skip).then(
+            (result) => { return res.status(200).json( result ); }
+        ).catch( 
+            (reason) => { return next({ statusCode:404, error: true, errormessage: "DB error: "+reason }); }
+        )
+    }
+});
+
+app.post('/drinks', /*auth, */(req, res, next) => {
+    let new_drink = drink.newDrink(req.body);
+
+    new_drink.save().then(
+        (data) => {
+            console.log("Drink added to the db".green);
+            return res.status(200).json({error: false, errormessage: "", id: data._id})
+        }
+    ).catch(
+        (reason) => {
+            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason.errmsg });
+        }
+    );
+});
+
+app.delete('/drinks/:id', /*auth, */(req, res, next) => {
+    let id = req.params.id;
+
+    drink.getModel().deleteOne( {_id: id } ).then( 
+        ( q ) => {
+          if( q.deletedCount > 0 ) 
+            return res.status(200).json( {error:false, errormessage:""} );
+
+          else 
+            return res.status(404).json( {error:true, errormessage:"Invalid drink ID"} );
+        }
+    ).catch( 
+        (reason)=> {
+            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason });
+        }
+    )
+});
+
+
+/*
+        ██╗    ████████╗ █████╗ ██████╗ ██╗     ███████╗███████╗
+       ██╔╝    ╚══██╔══╝██╔══██╗██╔══██╗██║     ██╔════╝██╔════╝
+      ██╔╝        ██║   ███████║██████╔╝██║     █████╗  ███████╗
+     ██╔╝         ██║   ██╔══██║██╔══██╗██║     ██╔══╝  ╚════██║
+    ██╔╝          ██║   ██║  ██║██████╔╝███████╗███████╗███████║
+    ╚═╝           ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚══════╝╚══════╝╚══════╝                                                         
+                                    
+    Endpoint: /tables
+*/
+app.get('/tables/:id?', /*auth, */(req, res, next) => {
+    if (req.params.id) {
+        let id = req.params.id;
+        
+        table.getModel().find( {_id: id } ).then(
+            (result) => { return res.status(200).json( result ); }
+        ).catch( 
+            (reason) => { return next({ statusCode:404, error: true, errormessage: "DB error: "+reason }); }
+        )
+    } else {
+        let tableseats;
+        if (req.query.seats) tableseats = req.query.seats;
+
+        let skip = parseInt( req.query.skip as string || "0" ) || 0;
+        let limit = parseInt( req.query.limit as string || "20" ) || 20;
+        
+        table.getModel().find( (tableseats) ? { seats: tableseats } : { } ).limit(limit).skip(skip).then(
+            (result) => { return res.status(200).json( result ); }
+        ).catch( 
+            (reason) => { return next({ statusCode:404, error: true, errormessage: "DB error: "+reason }); }
+        )
+    }
+});
+
+app.post('/tables', /*auth, */(req, res, next) => {
+    let new_table = table.newTable(req.body);
+
+    new_table.save().then(
+        (data) => {
+            console.log("Table added to the db".green);
+            return res.status(200).json({error: false, errormessage: "", id: data._id})
+        }
+    ).catch(
+        (reason) => {
+            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason.errmsg });
+        }
+    );
+});
+
+app.delete('/tables/:id', /*auth, */(req, res, next) => {
+    let id = req.params.id;
+
+    table.getModel().deleteOne( {_id: id } ).then( 
+        ( q ) => {
+          if( q.deletedCount > 0 ) 
+            return res.status(200).json( {error:false, errormessage:""} );
+
+          else 
+            return res.status(404).json( {error:true, errormessage:"Invalid table ID"} );
+        }
+    ).catch( 
+        (reason)=> {
+            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason });
+        }
+    )
+});
+
+
+// Configure HTTP basic authentication strategy trough passport middleware.
+
+passport.use( new passportHTTP.BasicStrategy(
+    function(username, password, done) {
+        console.log("New login attempt from " + username );
+
+        user.getModel().findOne( {username: username}).then(
+            (info) => { 
+                if ( !info ) {
+                    return done(null,false,{statusCode: 500, error: true, errormessage:"Invalid user"});
+                }
+
+                if ( info.checkPassword(password) ) {
+                    console.log("Checking password...".rainbow);
+                    return done(null, user);
+                }
+      
+                return done(null,false,{statusCode: 500, error: true, errormessage:"Invalid password"});
+            }
+        );
+
+        /*
+        user.getModel().findOne( {username: username} , (err, user)=>{
+            if ( err ) {
+                return done( {statusCode: 500, error: true, errormessage:err} );
+            }
+  
+            if ( !user ) {
+                return done(null,false,{statusCode: 500, error: true, errormessage:"Invalid user"});
+            }
+  
+            if ( user.checkPassword(password) ) {
+                console.log("Checking password...".rainbow);
+                return done(null, user);
+            }
+  
+            return done(null,false,{statusCode: 500, error: true, errormessage:"Invalid password"});
+        });
+        */
+    }
+));
+
+// Login endpoint uses passport middleware to check
+// user credentials before generating a new JWT
+app.get("/login", passport.authenticate('basic', { session: false }), (req,res,next) => {
+
+    // If we reach this point, the user is successfully authenticated and
+    // has been injected into req.user
+  
+    // We now generate a JWT with the useful user data
+    // and return it as response
+  
+    let tokendata = null/*{
+      username: req.user.username,
+      roles: req.user.roles,
+      mail: req.user.mail,
+      id: req.user.id
+    };*/
+  
+    console.log("Login granted. Generating token".green );
+    let token_signed = jsonwebtoken.sign(tokendata, process.env.JWT_SECRET, { expiresIn: '1h' } );
+  
+    // Note: You can manually check the JWT content at https://jwt.io
+  
+    return res.status(200).json({ error: false, errormessage: "", token: token_signed });
+  
+  });
 
 // Add error handling middleware
 app.use( function(err, _1, res, _2) {
@@ -166,8 +510,6 @@ mongoose.connect( 'mongodb://mymongo:27017/restaurant_manager' )
             u.setRole(user.Roles.Admin);
             u.setPassword("adminpwd");
             return u.save();
-        } else {
-            console.log("Admin user already exists");
         }
     }
 ).then(    // Check if exists some dishes, drinks and tables inside the db
@@ -228,7 +570,7 @@ mongoose.connect( 'mongodb://mymongo:27017/restaurant_manager' )
             console.log("Socket.io client connected".green);
         });
 
-        server.listen(process.env.PORT, () => console.log("HTTP Server started on port 8080".green));
+        server.listen(process.env.PORT, () => console.log(("HTTP Server started on port " + process.env.PORT).green));
     }
 ).catch(
     (err) => {

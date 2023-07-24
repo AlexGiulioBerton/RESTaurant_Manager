@@ -4,7 +4,6 @@ import crypto = require('crypto');
 export enum Roles { Waiter = 1, Cook, Bartender, Cashier, Admin };
 
 export interface User extends mongoose.Document {
-    readonly _id: mongoose.Schema.Types.ObjectId,
     username: string,
     digestpwd: string, // hashed password
     salt: string,
@@ -22,12 +21,12 @@ export interface User extends mongoose.Document {
 const userSchema = new mongoose.Schema<User>({
     username: {
         type: mongoose.SchemaTypes.String,
-        required: true
+        required: true,
+        unique: true
     },
     digestpwd: {
         type: mongoose.SchemaTypes.String,
-        required: true,
-        unique: true
+        required: true
     },
     salt: {
         type: mongoose.SchemaTypes.String,
@@ -62,7 +61,7 @@ userSchema.methods.checkPassword = function(pwd: string): boolean {
     const hmac = crypto.createHmac('sha512', this.salt );
     hmac.update(pwd);
     const digest = hmac.digest('hex');
-    return (this.digest === digest);
+    return (this.digestpwd === digest);
 };
 
 userSchema.methods.setRole = function(role: Roles) {
