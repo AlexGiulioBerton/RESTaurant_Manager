@@ -75,9 +75,15 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:true}));
 
 app.use(function (req, _, next) {
-    console.log("===============================================".inverse);
-    console.log("New request for: " + req.url);
-    console.log("Method: " + req.method);
+    console.log();
+    console.log("===================================================================".inverse);
+    console.log("New request for: " + req.url.gray.italic);
+
+    if (req.method == "GET") console.log("Method: " + req.method.green);
+    else if (req.method == "POST") console.log("Method: " + req.method.yellow);
+    else if (req.method == "PUT") console.log("Method: " + req.method.blue);
+    else if (req.method == "DELETE") console.log("Method: " + req.method.red);
+
     console.log(("Time: " + new Date()).gray);
     console.log();
     next();
@@ -96,7 +102,7 @@ app.use(function (req, _, next) {
 app.get("/", (req,res) => {
     res.status(200).json( { 
         api_version: "1.0", 
-        endpoints: [ "/orders", "/", "/", "/login" ] 
+        endpoints: [ "/dishes", "/drinks", "/tables", "/orders", "/users", "/login" ] 
     } );
 });
 
@@ -112,15 +118,79 @@ app.get("/", (req,res) => {
  Endpoint: /orders                                      
 */
 
-app.get('/orders', (req, res, next) => {
-    let skip = parseInt( req.query.skip as string || "0" ) || 0;
-    let limit = parseInt( req.query.limit as string || "20" ) || 20;
+app.get('/orders/:id?',/*auth, */(req, res, next) => {
+    if (req.params.id) {
+        let id = req.params.id;
+        order.getModel().find( {_id: id } ).then(
+            (result) => { return res.status(200).json( result ); }
+        ).catch( 
+            (reason) => { return next({ statusCode:404, error: true, errormessage: "DB error: "+reason }); }
+        )
+    } else {
+        let skip = parseInt( req.query.skip as string || "0" ) || 0;
+        let limit = parseInt( req.query.limit as string || "20" ) || 20;
+        let t = req.query.table;
+        let s = req.query.status;
+        let filter = { };
+        
+        if (t && s) filter = { table: t, status: s };
+        else if (t && !s) filter = { table: t };
+        else if (!t && s) filter = { status: s };
 
-    order.getModel().find( { } ).sort({timestamp:-1}).skip( skip ).limit( limit ).then( (documents) => {
-        return res.status(200).json( documents );
-    }).catch( (reason) => {
-        return next({ statusCode:404, error: true, errormessage: "DB error: "+reason });
-    });
+        order.getModel().find( filter ).sort({timestamp:-1}).skip( skip ).limit( limit ).then( 
+            (documents) => { return res.status(200).json( documents ); }
+        ).catch( 
+            (reason) => { return next({ statusCode:404, error: true, errormessage: "DB error: "+reason }); }
+        );
+    }
+});
+
+app.post('/orders',/* auth, */(req, res, next) => {
+    let o = order.newOrder(req.body);
+
+    o.save().then(
+        (data) => {
+            console.log("Order added to the db".green);
+            return res.status(200).json({error: false, errormessage: "", id: data._id})
+        }
+    ).catch(
+        (reason) => {
+            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason.errmsg });
+        }
+    )
+});
+
+app.put('/orders/:id/status',/* auth, */(req, res, next) => {
+    let id = req.params.id;
+
+    order.getModel().updateOne( { _id: id }, req.body ).then(
+        (data) => {
+            console.log("Order status modified".green);
+            return res.status(200).json( { error: false, errormessage: "", elements_modified: data.matchedCount} );
+        }
+    ).catch(
+        (reason) => {
+            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason });
+        }
+    )
+});
+
+app.delete('/orders/:id',/* auth, */(req, res, next) => {
+    let order_id = req.params.id;
+
+    order.getModel().deleteOne( { _id: order_id } ).then(
+        ( q ) => {
+            if( q.deletedCount > 0 ) {
+                console.log("Order deleted".green);
+                return res.status(200).json( {error:false, errormessage:""} );
+            } else
+                return res.status(404).json( {error:true, errormessage:"Invalid order id"} );
+        }
+    ).catch( 
+        (reason)=> {
+            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason });
+        }
+    );
 });
 
 /*
@@ -133,6 +203,19 @@ app.get('/orders', (req, res, next) => {
 
     Endpoint: users
 */
+app.get('/users/:username',/* auth, */(req, res, next) => {
+    let usrn = req.params.username;
+
+    user.getModel().find( { username: usrn } ).then(
+        (result) => {
+            return res.status(200).json( result );
+        }
+    ).catch(
+        (reason) => {
+            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason });
+        }
+    );
+});
 
 app.post('/users', /* auth, */(req, res, next) => {
     user.getModel().find({username: req.body.username}).count().then(
@@ -164,28 +247,15 @@ app.post('/users', /* auth, */(req, res, next) => {
     );
 });
 
-app.get('/users/:username',/* auth, */(req, res, next) => {
-    let usrn = req.params.username;
-
-    user.getModel().find( { username: usrn } ).then(
-        (result) => {
-            return res.status(200).json( result );
-        }
-    ).catch(
-        (reason) => {
-            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason });
-        }
-    );
-});
-
 app.delete('/users/:username', /*auth, */(req, res, next) => {
     let usrn = req.params.username;
 
     user.getModel().deleteOne({username: usrn}).then(
         ( q ) => {
-            if( q.deletedCount > 0 )
+            if( q.deletedCount > 0 ) {
+                console.log("User removed from the system".green);
                 return res.status(200).json( {error:false, errormessage:""} );
-            else 
+            } else 
                 return res.status(404).json( {error:true, errormessage:"Invalid username"} );
         }
     ).catch( 
@@ -331,13 +401,16 @@ app.delete('/drinks/:id', /*auth, */(req, res, next) => {
 
 
 /*
-        ██╗    ████████╗ █████╗ ██████╗ ██╗     ███████╗███████╗
-       ██╔╝    ╚══██╔══╝██╔══██╗██╔══██╗██║     ██╔════╝██╔════╝
-      ██╔╝        ██║   ███████║██████╔╝██║     █████╗  ███████╗
-     ██╔╝         ██║   ██╔══██║██╔══██╗██║     ██╔══╝  ╚════██║
-    ██╔╝          ██║   ██║  ██║██████╔╝███████╗███████╗███████║
-    ╚═╝           ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚══════╝╚══════╝╚══════╝                                                         
-                                    
+
+      __  _        _     _           
+     / / | |      | |   | |          
+    / /  | |_ __ _| |__ | | ___  ___ 
+   / /   | __/ _` | '_ \| |/ _ \/ __|
+  / /    | || (_| | |_) | |  __/\__ \
+ /_/      \__\__,_|_.__/|_|\___||___/
+                                     
+                                     
+                            
     Endpoint: /tables
 */
 app.get('/tables/:id?', /*auth, */(req, res, next) => {
@@ -491,7 +564,7 @@ app.use( (_, res, next) => {
 mongoose.connect( 'mongodb://mymongo:27017/restaurant_manager' )
 .then( 
     () => {
-        console.log("Connected to MongoDB");
+        console.log("Connected to MongoDB".green);
         return user.getModel().findOne( {username:"admin"} );
     }
 ).then(

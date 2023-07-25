@@ -25,7 +25,7 @@ const orderSchema = new mongoose.Schema<Order>({
         required: true,
     },
     table: {
-        type: [mongoose.Schema.Types.ObjectId], 
+        type: mongoose.Schema.Types.ObjectId, 
         ref: 'Table',
         required: false
     },
