@@ -4,6 +4,7 @@ export interface Table extends mongoose.Document {
     readonly _id: mongoose.Schema.Types.ObjectId,
     number: number,
     seats: number,
+    occupiedSeats: number,
     hasSeats: () => number,
     getTableInfo: () => string
 };
@@ -17,12 +18,12 @@ const tableSchema = new mongoose.Schema<Table>({
     seats: {
         type: mongoose.SchemaTypes.Number,
         required: false
+    },
+    occupiedSeats: {
+        type: mongoose.SchemaTypes.Number,
+        required: false
     }
 });
-
-tableSchema.methods.hasSeats = function(): number {
-    return this.seats;
-};
 
 tableSchema.methods.getTableInfo = function(): string {
     return "<Table[code: " + this.number + ", #seats: " + this.seats + "]>";

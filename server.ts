@@ -22,7 +22,13 @@
  *       /users/:id                     _                 DELETE          Delete a user given its id
  * 
  *       /login                         _                 POST            Login an existing user, returning a JWT
+ * 
+ * 
+ * 
  */
+
+
+
 const result = require('dotenv').config();          // dotenv module will load the file named '.env' and all the key-value
                                                     // pairs into process.env environment variable
 
@@ -89,6 +95,7 @@ app.use(function (req, _, next) {
     next();
 });
 
+
 /*
           __
          / /
@@ -99,6 +106,7 @@ app.use(function (req, _, next) {
 
  Endpoint: /
 */
+
 app.get("/", (req,res) => {
     res.status(200).json( { 
         api_version: "1.0", 
@@ -118,7 +126,7 @@ app.get("/", (req,res) => {
  Endpoint: /orders                                      
 */
 
-app.get('/orders/:id?',/*auth, */(req, res, next) => {
+app.get('/orders/:id?', auth, (req, res, next) => {
     if (req.params.id) {
         let id = req.params.id;
         order.getModel().find( {_id: id } ).then(
@@ -145,7 +153,7 @@ app.get('/orders/:id?',/*auth, */(req, res, next) => {
     }
 });
 
-app.post('/orders',/* auth, */(req, res, next) => {
+app.post('/orders', (req, res, next) => {
     let o = order.newOrder(req.body);
 
     o.save().then(
@@ -160,12 +168,12 @@ app.post('/orders',/* auth, */(req, res, next) => {
     )
 });
 
-app.put('/orders/:id/status',/* auth, */(req, res, next) => {
+app.put('/orders/:id/dishstatus', (req, res, next) => {
     let id = req.params.id;
 
     order.getModel().updateOne( { _id: id }, req.body ).then(
         (data) => {
-            console.log("Order status modified".green);
+            console.log("Dishes status modified".green);
             return res.status(200).json( { error: false, errormessage: "", elements_modified: data.matchedCount} );
         }
     ).catch(
@@ -175,7 +183,22 @@ app.put('/orders/:id/status',/* auth, */(req, res, next) => {
     )
 });
 
-app.delete('/orders/:id',/* auth, */(req, res, next) => {
+app.put('/orders/:id/drinkstatus', (req, res, next) => {
+    let id = req.params.id;
+
+    order.getModel().updateOne( { _id: id }, req.body ).then(
+        (data) => {
+            console.log("Drinks status modified".green);
+            return res.status(200).json( { error: false, errormessage: "", elements_modified: data.matchedCount} );
+        }
+    ).catch(
+        (reason) => {
+            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason });
+        }
+    )
+});
+
+app.delete('/orders/:id', auth, (req, res, next) => {
     let order_id = req.params.id;
 
     order.getModel().deleteOne( { _id: order_id } ).then(
@@ -201,9 +224,10 @@ app.delete('/orders/:id',/* auth, */(req, res, next) => {
      / /    | |_| \__ \  __/ |  \__ \
     /_/      \__,_|___/\___|_|  |___/
 
-    Endpoint: users
+    Endpoint: /users
 */
-app.get('/users/:username',/* auth, */(req, res, next) => {
+
+app.get('/users/:username', auth, (req, res, next) => {
     let usrn = req.params.username;
 
     user.getModel().find( { username: usrn } ).then(
@@ -217,7 +241,7 @@ app.get('/users/:username',/* auth, */(req, res, next) => {
     );
 });
 
-app.post('/users', /* auth, */(req, res, next) => {
+app.post('/users', (req, res, next) => {
     user.getModel().find({username: req.body.username}).count().then(
         (count) => {
             if (count == 0) {
@@ -247,7 +271,7 @@ app.post('/users', /* auth, */(req, res, next) => {
     );
 });
 
-app.delete('/users/:username', /*auth, */(req, res, next) => {
+app.delete('/users/:username', auth, (req, res, next) => {
     let usrn = req.params.username;
 
     user.getModel().deleteOne({username: usrn}).then(
@@ -273,9 +297,10 @@ app.delete('/users/:username', /*auth, */(req, res, next) => {
      / /    | (_| | \__ \ | | |  __/\__ \
     /_/      \__,_|_|___/_| |_|\___||___/
                                         
-    Endpoint: dishes
+    Endpoint: /dishes
 */
-app.get('/dishes/:id?', /*auth, */(req, res, next) => {
+
+app.get('/dishes/:id?', auth, (req, res, next) => {
     if (req.params.id) {
         let id = req.params.id;
         dish.getModel().find( {_id: id } ).then(
@@ -298,7 +323,7 @@ app.get('/dishes/:id?', /*auth, */(req, res, next) => {
     }
 });
 
-app.post('/dishes', /*auth, */(req, res, next) => {
+app.post('/dishes', auth, (req, res, next) => {
     let new_dish = dish.newDish(req.body);
 
     new_dish.save().then(
@@ -313,7 +338,7 @@ app.post('/dishes', /*auth, */(req, res, next) => {
     );
 });
 
-app.delete('/dishes/:id', /*auth, */(req, res, next) => {
+app.delete('/dishes/:id', auth, (req, res, next) => {
     let id = req.params.id;
 
     dish.getModel().deleteOne( {_id: id } ).then( 
@@ -340,9 +365,10 @@ app.delete('/dishes/:id', /*auth, */(req, res, next) => {
      / /    | (_| | |  | | | | |   <\__ \
     /_/      \__,_|_|  |_|_| |_|_|\_\___/
 
-    Endpoint: drinks
+    Endpoint: /drinks
 */
-app.get('/drinks/:id?', /*auth, */(req, res, next) => {
+
+app.get('/drinks/:id?', auth, (req, res, next) => {
     if (req.params.id) {
         let id = req.params.id;
         
@@ -366,7 +392,7 @@ app.get('/drinks/:id?', /*auth, */(req, res, next) => {
     }
 });
 
-app.post('/drinks', /*auth, */(req, res, next) => {
+app.post('/drinks', auth, (req, res, next) => {
     let new_drink = drink.newDrink(req.body);
 
     new_drink.save().then(
@@ -381,7 +407,7 @@ app.post('/drinks', /*auth, */(req, res, next) => {
     );
 });
 
-app.delete('/drinks/:id', /*auth, */(req, res, next) => {
+app.delete('/drinks/:id', auth, (req, res, next) => {
     let id = req.params.id;
 
     drink.getModel().deleteOne( {_id: id } ).then( 
@@ -401,19 +427,17 @@ app.delete('/drinks/:id', /*auth, */(req, res, next) => {
 
 
 /*
-
-      __  _        _     _           
-     / / | |      | |   | |          
-    / /  | |_ __ _| |__ | | ___  ___ 
-   / /   | __/ _` | '_ \| |/ _ \/ __|
-  / /    | || (_| | |_) | |  __/\__ \
- /_/      \__\__,_|_.__/|_|\___||___/
-                                     
-                                     
+         __  _        _     _           
+        / / | |      | |   | |          
+       / /  | |_ __ _| |__ | | ___  ___ 
+      / /   | __/ _` | '_ \| |/ _ \/ __|
+     / /    | || (_| | |_) | |  __/\__ \
+    /_/      \__\__,_|_.__/|_|\___||___/                     
                             
     Endpoint: /tables
 */
-app.get('/tables/:id?', /*auth, */(req, res, next) => {
+
+app.get('/tables/:id?', auth, (req, res, next) => {
     if (req.params.id) {
         let id = req.params.id;
         
@@ -437,7 +461,7 @@ app.get('/tables/:id?', /*auth, */(req, res, next) => {
     }
 });
 
-app.post('/tables', /*auth, */(req, res, next) => {
+app.post('/tables', auth, (req, res, next) => {
     let new_table = table.newTable(req.body);
 
     new_table.save().then(
@@ -452,7 +476,23 @@ app.post('/tables', /*auth, */(req, res, next) => {
     );
 });
 
-app.delete('/tables/:id', /*auth, */(req, res, next) => {
+app.put('/tables/:id/occupied', auth, (req, res, next) => {
+    let id = req.params.id;
+
+    table.getModel().updateOne( { _id: id }, req.body ).then(
+        (data) => {
+            console.log("Tables status modified".green);
+            return res.status(200).json( { error: false, errormessage: "", elements_modified: data.matchedCount} );
+        }
+    ).catch(
+        (reason) => {
+            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason });
+        }
+    )
+});
+
+
+app.delete('/tables/:id', auth, (req, res, next) => {
     let id = req.params.id;
 
     table.getModel().deleteOne( {_id: id } ).then( 
@@ -471,51 +511,44 @@ app.delete('/tables/:id', /*auth, */(req, res, next) => {
 });
 
 
+declare global {
+    namespace Express {
+        interface User {
+            username: string,
+            name: string,
+            surname: string,
+            birthday: Date,
+            role: user.Roles
+        }
+    }
+}
+
+
 // Configure HTTP basic authentication strategy trough passport middleware.
 
 passport.use( new passportHTTP.BasicStrategy(
-    function(username, password, done) {
-        console.log("New login attempt from " + username );
+    function(usrn, password, done) {
+        console.log("New login attempt from " + usrn);
+        console.log(password);
+        
+        user.getModel().find( { username: usrn }).then(
+            (response) => {
+                if (!response[0]) return done(null,false,{statusCode: 500, error: true, errormessage:"Invalid user"});
+                
+                let user = response[0];
 
-        user.getModel().findOne( {username: username}).then(
-            (info) => { 
-                if ( !info ) {
-                    return done(null,false,{statusCode: 500, error: true, errormessage:"Invalid user"});
+                if (user.checkPassword(password)) {
+                    done(null, user);
                 }
-
-                if ( info.checkPassword(password) ) {
-                    console.log("Checking password...".rainbow);
-                    return done(null, user);
-                }
-      
-                return done(null,false,{statusCode: 500, error: true, errormessage:"Invalid password"});
             }
         );
-
-        /*
-        user.getModel().findOne( {username: username} , (err, user)=>{
-            if ( err ) {
-                return done( {statusCode: 500, error: true, errormessage:err} );
-            }
-  
-            if ( !user ) {
-                return done(null,false,{statusCode: 500, error: true, errormessage:"Invalid user"});
-            }
-  
-            if ( user.checkPassword(password) ) {
-                console.log("Checking password...".rainbow);
-                return done(null, user);
-            }
-  
-            return done(null,false,{statusCode: 500, error: true, errormessage:"Invalid password"});
-        });
-        */
+        
     }
 ));
 
 // Login endpoint uses passport middleware to check
 // user credentials before generating a new JWT
-app.get("/login", passport.authenticate('basic', { session: false }), (req,res,next) => {
+app.get("/login", passport.authenticate('basic', { session: false }), (req,res) => {
 
     // If we reach this point, the user is successfully authenticated and
     // has been injected into req.user
@@ -523,21 +556,19 @@ app.get("/login", passport.authenticate('basic', { session: false }), (req,res,n
     // We now generate a JWT with the useful user data
     // and return it as response
   
-    let tokendata = null/*{
-      username: req.user.username,
-      roles: req.user.roles,
-      mail: req.user.mail,
-      id: req.user.id
-    };*/
+    let tokendata = {
+        birthday: req.user.birthday,
+        name: req.user.name,
+        surname: req.user.surname,
+        role: req.user.role,
+        username: req.user.username
+    };
   
     console.log("Login granted. Generating token".green );
     let token_signed = jsonwebtoken.sign(tokendata, process.env.JWT_SECRET, { expiresIn: '1h' } );
   
-    // Note: You can manually check the JWT content at https://jwt.io
-  
     return res.status(200).json({ error: false, errormessage: "", token: token_signed });
-  
-  });
+});
 
 // Add error handling middleware
 app.use( function(err, _1, res, _2) {
@@ -621,16 +652,16 @@ mongoose.connect( 'mongodb://mymongo:27017/restaurant_manager' )
     (info) => {
         if (info == 0) {
             console.log("Adding some tables into the database");
-            let t1 = table.getModel().create({number: 1, seats: 5});
-            let t2 = table.getModel().create({number: 2, seats: 3});
-            let t3 = table.getModel().create({number: 3, seats: 2});
-            let t4 = table.getModel().create({number: 4, seats: 5});
-            let t5 = table.getModel().create({number: 5, seats: 2});
-            let t6 = table.getModel().create({number: 6, seats: 2});
-            let t7 = table.getModel().create({number: 7, seats: 4});
-            let t8 = table.getModel().create({number: 8, seats: 4});
-            let t9 = table.getModel().create({number: 9, seats: 4});
-            let t10 = table.getModel().create({number: 10, seats: 3});
+            let t1 = table.getModel().create( { number: 1, seats: 5, occupiedSeats: 0 });
+            let t2 = table.getModel().create( { number: 2, seats: 3, occupiedSeats: 0 });
+            let t3 = table.getModel().create( { number: 3, seats: 2, occupiedSeats: 0 });
+            let t4 = table.getModel().create( { number: 4, seats: 5, occupiedSeats: 0 });
+            let t5 = table.getModel().create( { number: 5, seats: 2, occupiedSeats: 0 });
+            let t6 = table.getModel().create( { number: 6, seats: 2, occupiedSeats: 0 });
+            let t7 = table.getModel().create( { number: 7, seats: 4, occupiedSeats: 0 });
+            let t8 = table.getModel().create( { number: 8, seats: 4, occupiedSeats: 0 });
+            let t9 = table.getModel().create( { number: 9, seats: 4, occupiedSeats: 0 });
+            let t10 = table.getModel().create( { number: 10, seats: 3, occupiedSeats: 0 });
             return Promise.all([t1, t2, t3, t4, t5, t6, t7, t8, t9, t10]);
         }
     }
