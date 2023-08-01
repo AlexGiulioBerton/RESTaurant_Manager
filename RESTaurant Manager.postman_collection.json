@@ -1,0 +1,1685 @@
+{
+	"info": {
+		"_postman_id": "53cae9c7-54c8-475e-882f-27d071656504",
+		"name": "RESTaurant Manager",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "13491312"
+	},
+	"item": [
+		{
+			"name": "Orders",
+			"item": [
+				{
+					"name": "Get orders",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "secret",
+									"value": "restaurantmanagerTAW2023",
+									"type": "string"
+								},
+								{
+									"key": "payload",
+									"value": "{\n  \"birthday\": \"2001-10-27T00:00:00.000Z\",\n  \"name\": \"Alex Giulio\",\n  \"surname\": \"Berton\",\n  \"role\": 4,\n  \"username\": \"alexgb\",\n  \"iat\": 1690921214,\n  \"exp\": 1690924814\n}",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "Bearer",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/orders",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"orders"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "2",
+									"disabled": true
+								},
+								{
+									"key": "table",
+									"value": "64bfccd7a1ea09092e1af1et",
+									"disabled": true
+								},
+								{
+									"key": "skip",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "1",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Order Info",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "secret",
+									"value": "restaurantmanagerTAW2023",
+									"type": "string"
+								},
+								{
+									"key": "payload",
+									"value": "{\n  \"birthday\": \"2001-10-27T00:00:00.000Z\",\n  \"name\": \"Alex Giulio\",\n  \"surname\": \"Berton\",\n  \"role\": 4,\n  \"username\": \"alexgb\",\n  \"iat\": 1690921214,\n  \"exp\": 1690924814\n}",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "Bearer",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/orders/64c7b8c05b54a6dc587c6e32",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"orders",
+								"64c7b8c05b54a6dc587c6e32"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update drink status",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "secret",
+									"value": "restaurantmanagerTAW2023",
+									"type": "string"
+								},
+								{
+									"key": "payload",
+									"value": "{\n  \"birthday\": \"2001-10-27T00:00:00.000Z\",\n  \"name\": \"Alex Giulio\",\n  \"surname\": \"Berton\",\n  \"role\": 4,\n  \"username\": \"alexgb\",\n  \"iat\": 1690921214,\n  \"exp\": 1690924814\n}",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "Bearer",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"drinksStatus\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/orders/64c7b8c05b54a6dc587c6e32/drinkstatus",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"orders",
+								"64c7b8c05b54a6dc587c6e32",
+								"drinkstatus"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update dish status",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "secret",
+									"value": "restaurantmanagerTAW2023",
+									"type": "string"
+								},
+								{
+									"key": "payload",
+									"value": "{\n  \"birthday\": \"2001-10-27T00:00:00.000Z\",\n  \"name\": \"Alex Giulio\",\n  \"surname\": \"Berton\",\n  \"role\": 4,\n  \"username\": \"alexgb\",\n  \"iat\": 1690921214,\n  \"exp\": 1690924814\n}",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "Bearer",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"dishesStatus\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/orders/64c7b8c05b54a6dc587c6e32/dishstatus",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"orders",
+								"64c7b8c05b54a6dc587c6e32",
+								"dishstatus"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "New Order",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "secret",
+									"value": "restaurantmanagerTAW2023",
+									"type": "string"
+								},
+								{
+									"key": "payload",
+									"value": "{\n  \"birthday\": \"2001-10-27T00:00:00.000Z\",\n  \"name\": \"Alex Giulio\",\n  \"surname\": \"Berton\",\n  \"role\": 4,\n  \"username\": \"alexgb\",\n  \"iat\": 1690921214,\n  \"exp\": 1690924814\n}",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "Bearer",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"dishes\": [\n        \"64bfccd6a1ea09092e1af1e0\",\n        \"64bfccd6a1ea09092e1af1e0\"\n    ],\n    \"drinks\": [],\n    \"table\": \"64bfccd7a1ea09092e1af1ed\",\n    \"time\": \"2023-07-25 12:00:00\",\n    \"dishesStatus\": 0,\n    \"drinksStatus\": 0,\n    \"waiter\": \"64bfccd6a1ea09092e1af1db\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/orders",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"orders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete order",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "secret",
+									"value": "restaurantmanagerTAW2023",
+									"type": "string"
+								},
+								{
+									"key": "payload",
+									"value": "{\n  \"birthday\": \"2001-10-27T00:00:00.000Z\",\n  \"name\": \"Alex Giulio\",\n  \"surname\": \"Berton\",\n  \"role\": 4,\n  \"username\": \"alexgb\",\n  \"iat\": 1690921214,\n  \"exp\": 1690924814\n}",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "Bearer",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/orders/64bfea110435793eb39c8c8c",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"orders",
+								"64bfea110435793eb39c8c8c"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Users list",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "secret",
+									"value": "restaurantmanagerTAW2023",
+									"type": "string"
+								},
+								{
+									"key": "payload",
+									"value": "{\n  \"birthday\": \"2001-10-27T00:00:00.000Z\",\n  \"name\": \"Alex Giulio\",\n  \"surname\": \"Berton\",\n  \"role\": 4,\n  \"username\": \"alexgb\",\n  \"iat\": 1690921214,\n  \"exp\": 1690924814\n}",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "Bearer",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/users/",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"users",
+								""
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "skip",
+									"value": "1",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Info user",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "secret",
+									"value": "restaurantmanagerTAW2023",
+									"type": "string"
+								},
+								{
+									"key": "payload",
+									"value": "{\n  \"birthday\": \"2001-10-27T00:00:00.000Z\",\n  \"name\": \"Alex Giulio\",\n  \"surname\": \"Berton\",\n  \"role\": 4,\n  \"username\": \"alexgb\",\n  \"iat\": 1690921214,\n  \"exp\": 1690924814\n}",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "Bearer",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "localhost:8080/users/alexgb",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"users",
+								"alexgb"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "New user",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"alexgb\",\n    \"password\": \"112233\",\n    \"role\": 4,\n    \"name\": \"Alex Giulio\",\n    \"surname\": \"Berton\",\n    \"birthday\": \"2001-10-27\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/users",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete user",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "secret",
+									"value": "restaurantmanagerTAW2023",
+									"type": "string"
+								},
+								{
+									"key": "payload",
+									"value": "{\n  \"birthday\": \"2001-10-27T00:00:00.000Z\",\n  \"name\": \"Alex Giulio\",\n  \"surname\": \"Berton\",\n  \"role\": 4,\n  \"username\": \"alexgb\",\n  \"iat\": 1690921214,\n  \"exp\": 1690924814\n}",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "Bearer",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/users/francoTest",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"users",
+								"francoTest"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Dishes",
+			"item": [
+				{
+					"name": "Get dishes",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "secret",
+									"value": "restaurantmanagerTAW2023",
+									"type": "string"
+								},
+								{
+									"key": "payload",
+									"value": "{\n  \"birthday\": \"2001-10-27T00:00:00.000Z\",\n  \"name\": \"Alex Giulio\",\n  \"surname\": \"Berton\",\n  \"role\": 4,\n  \"username\": \"alexgb\",\n  \"iat\": 1690921214,\n  \"exp\": 1690924814\n}",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "Bearer",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/dishes",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"dishes"
+							],
+							"query": [
+								{
+									"key": "category",
+									"value": "PRIMI PIATTI",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "skip",
+									"value": "2",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Dish Info",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "secret",
+									"value": "restaurantmanagerTAW2023",
+									"type": "string"
+								},
+								{
+									"key": "payload",
+									"value": "{\n  \"birthday\": \"2001-10-27T00:00:00.000Z\",\n  \"name\": \"Alex Giulio\",\n  \"surname\": \"Berton\",\n  \"role\": 4,\n  \"username\": \"alexgb\",\n  \"iat\": 1690921214,\n  \"exp\": 1690924814\n}",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "Bearer",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/dishes/64bea86b69acbb69dc64fa23",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"dishes",
+								"64bea86b69acbb69dc64fa23"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "New dish",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "secret",
+									"value": "restaurantmanagerTAW2023",
+									"type": "string"
+								},
+								{
+									"key": "payload",
+									"value": "{\n  \"birthday\": \"2001-10-27T00:00:00.000Z\",\n  \"name\": \"Alex Giulio\",\n  \"surname\": \"Berton\",\n  \"role\": 4,\n  \"username\": \"alexgb\",\n  \"iat\": 1690921214,\n  \"exp\": 1690924814\n}",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "Bearer",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Bigoli al ragù\",\n    \"ingredients\": [\n        \"Pasta fresca all'uovo\",\n        \"Macinato di manzo\",\n        \"Passata di pomodoro\",\n        \"Preparato per soffritto\"\n    ],\n    \"recipe\": \"Iniziamo preparando il nostro ragù, prendiamo il nostro filetto di maiale e lo iniziamo a tagliare a pezzi sempre più piccoli ( circa 5mm) con un buon coltello. Dopo aver battuto bene la carne prendiamo una pentola capiente facciamo soffriggere la nostra cipolla con la carota in olio extravergine d’oliva e burro. Mettiamo la carne nella nostra pentola a fuoco basso, poi condiamo con sale, pepe e prezzemolo tritato. Quando la carne avrà un colorito uniforme sfumiamo con il vino bianco, copriamo con un coperchio e lasciamo cuocere un paio d’ore bagnando di tanto in tanto con il brodo vegetale. Nel frattempo cuociamo i nostri bigoli in abbondate acqua calda, quando saranno ben cotti li mettiamo nei piatti da servire ed aggiungiamo il nostro ragù con abbondante parmigiano grattugiato. Se non volete battere a coltello voi la carne basta prendere della polpa di maiale tritata.\",\n    \"cookingTime\": 30,\n    \"price\": 8.99,\n    \"menuCategory\": \"PRIMI PIATTI\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/dishes",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"dishes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete dish",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "secret",
+									"value": "restaurantmanagerTAW2023",
+									"type": "string"
+								},
+								{
+									"key": "payload",
+									"value": "{\n  \"birthday\": \"2001-10-27T00:00:00.000Z\",\n  \"name\": \"Alex Giulio\",\n  \"surname\": \"Berton\",\n  \"role\": 4,\n  \"username\": \"alexgb\",\n  \"iat\": 1690921214,\n  \"exp\": 1690924814\n}",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "Bearer",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/dishes/64bea4f8285720f33a77566c",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"dishes",
+								"64bea4f8285720f33a77566c"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Drinks",
+			"item": [
+				{
+					"name": "Get Drinks",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "secret",
+									"value": "restaurantmanagerTAW2023",
+									"type": "string"
+								},
+								{
+									"key": "payload",
+									"value": "{\n  \"birthday\": \"2001-10-27T00:00:00.000Z\",\n  \"name\": \"Alex Giulio\",\n  \"surname\": \"Berton\",\n  \"role\": 4,\n  \"username\": \"alexgb\",\n  \"iat\": 1690921214,\n  \"exp\": 1690924814\n}",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "Bearer",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/drinks",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"drinks"
+							],
+							"query": [
+								{
+									"key": "category",
+									"value": "VINI",
+									"description": "oppure BEVANDE",
+									"disabled": true
+								},
+								{
+									"key": "limit",
+									"value": "2",
+									"disabled": true
+								},
+								{
+									"key": "skip",
+									"value": "2",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Drink Info",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "secret",
+									"value": "restaurantmanagerTAW2023",
+									"type": "string"
+								},
+								{
+									"key": "payload",
+									"value": "{\n  \"birthday\": \"2001-10-27T00:00:00.000Z\",\n  \"name\": \"Alex Giulio\",\n  \"surname\": \"Berton\",\n  \"role\": 4,\n  \"username\": \"alexgb\",\n  \"iat\": 1690921214,\n  \"exp\": 1690924814\n}",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "Bearer",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/drinks/64be942b763a9fc7458661d2",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"drinks",
+								"64be942b763a9fc7458661d2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "New drink",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "secret",
+									"value": "restaurantmanagerTAW2023",
+									"type": "string"
+								},
+								{
+									"key": "payload",
+									"value": "{\n  \"birthday\": \"2001-10-27T00:00:00.000Z\",\n  \"name\": \"Alex Giulio\",\n  \"surname\": \"Berton\",\n  \"role\": 4,\n  \"username\": \"alexgb\",\n  \"iat\": 1690921214,\n  \"exp\": 1690924814\n}",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "Bearer",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Vino San Crispino\",\n    \"ingredients\": [],\n    \"price\": 2.50,\n    \"menuCategory\": \"VINI\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/drinks",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"drinks"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete drink",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "secret",
+									"value": "restaurantmanagerTAW2023",
+									"type": "string"
+								},
+								{
+									"key": "payload",
+									"value": "{\n  \"birthday\": \"2001-10-27T00:00:00.000Z\",\n  \"name\": \"Alex Giulio\",\n  \"surname\": \"Berton\",\n  \"role\": 4,\n  \"username\": \"alexgb\",\n  \"iat\": 1690921214,\n  \"exp\": 1690924814\n}",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "Bearer",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/drinks/64beb246285720f33a775670",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"drinks",
+								"64beb246285720f33a775670"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Tables",
+			"item": [
+				{
+					"name": "Get Tables",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "secret",
+									"value": "restaurantmanagerTAW2023",
+									"type": "string"
+								},
+								{
+									"key": "payload",
+									"value": "{\n  \"birthday\": \"2001-10-27T00:00:00.000Z\",\n  \"name\": \"Alex Giulio\",\n  \"surname\": \"Berton\",\n  \"role\": 4,\n  \"username\": \"alexgb\",\n  \"iat\": 1690921214,\n  \"exp\": 1690924814\n}",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "Bearer",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/tables",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"tables"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "skip",
+									"value": "2",
+									"disabled": true
+								},
+								{
+									"key": "seats",
+									"value": "4",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Table Info",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "secret",
+									"value": "restaurantmanagerTAW2023",
+									"type": "string"
+								},
+								{
+									"key": "payload",
+									"value": "{\n  \"birthday\": \"2001-10-27T00:00:00.000Z\",\n  \"name\": \"Alex Giulio\",\n  \"surname\": \"Berton\",\n  \"role\": 4,\n  \"username\": \"alexgb\",\n  \"iat\": 1690921214,\n  \"exp\": 1690924814\n}",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "Bearer",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/tables/64c7b410b71869e8dd289628",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"tables",
+								"64c7b410b71869e8dd289628"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update table status",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "secret",
+									"value": "restaurantmanagerTAW2023",
+									"type": "string"
+								},
+								{
+									"key": "payload",
+									"value": "{\n  \"birthday\": \"2001-10-27T00:00:00.000Z\",\n  \"name\": \"Alex Giulio\",\n  \"surname\": \"Berton\",\n  \"role\": 4,\n  \"username\": \"alexgb\",\n  \"iat\": 1690921214,\n  \"exp\": 1690924814\n}",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "Bearer",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"occupiedSeats\": 0\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/tables/64c7b410b71869e8dd289628/occupied",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"tables",
+								"64c7b410b71869e8dd289628",
+								"occupied"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "New table",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "secret",
+									"value": "restaurantmanagerTAW2023",
+									"type": "string"
+								},
+								{
+									"key": "payload",
+									"value": "{\n  \"birthday\": \"2001-10-27T00:00:00.000Z\",\n  \"name\": \"Alex Giulio\",\n  \"surname\": \"Berton\",\n  \"role\": 4,\n  \"username\": \"alexgb\",\n  \"iat\": 1690921214,\n  \"exp\": 1690924814\n}",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "Bearer",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"number\": 20,\n    \"seats\": 30\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/tables",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"tables"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete table",
+					"request": {
+						"auth": {
+							"type": "jwt",
+							"jwt": [
+								{
+									"key": "secret",
+									"value": "restaurantmanagerTAW2023",
+									"type": "string"
+								},
+								{
+									"key": "payload",
+									"value": "{\n  \"birthday\": \"2001-10-27T00:00:00.000Z\",\n  \"name\": \"Alex Giulio\",\n  \"surname\": \"Berton\",\n  \"role\": 4,\n  \"username\": \"alexgb\",\n  \"iat\": 1690921214,\n  \"exp\": 1690924814\n}",
+									"type": "string"
+								},
+								{
+									"key": "addTokenTo",
+									"value": "header",
+									"type": "string"
+								},
+								{
+									"key": "algorithm",
+									"value": "HS256",
+									"type": "string"
+								},
+								{
+									"key": "isSecretBase64Encoded",
+									"value": false,
+									"type": "boolean"
+								},
+								{
+									"key": "headerPrefix",
+									"value": "Bearer",
+									"type": "string"
+								},
+								{
+									"key": "queryParamKey",
+									"value": "token",
+									"type": "string"
+								},
+								{
+									"key": "header",
+									"value": "{}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/tables/64bebd0cb35e215c810c1c6b",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"tables",
+								"64bebd0cb35e215c810c1c6b"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "/",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"",
+							"var jsonData = pm.response.json();",
+							"pm.globals.set(\"JWT_TOKEN\", jsonData.token);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "112233",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "alexgb",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/login",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"login"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
