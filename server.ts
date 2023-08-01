@@ -77,6 +77,7 @@ let app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(passport.initialize())
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:true}));
 
@@ -129,7 +130,7 @@ app.get("/", (req,res) => {
 app.get('/orders/:id?', auth, (req, res, next) => {
     if (req.params.id) {
         let id = req.params.id;
-        order.getModel().find( {_id: id } ).then(
+        order.getModel().findOne( {_id: id } ).then(
             (result) => { return res.status(200).json( result ); }
         ).catch( 
             (reason) => { return next({ statusCode:404, error: true, errormessage: "DB error: "+reason }); }
@@ -227,18 +228,30 @@ app.delete('/orders/:id', auth, (req, res, next) => {
     Endpoint: /users
 */
 
-app.get('/users/:username', auth, (req, res, next) => {
-    let usrn = req.params.username;
+app.get('/users/:username?', auth, (req, res, next) => {
+    if (req.params.username) {
+        let usrn = req.params.username;
 
-    user.getModel().find( { username: usrn } ).then(
-        (result) => {
-            return res.status(200).json( result );
-        }
-    ).catch(
-        (reason) => {
-            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason });
-        }
-    );
+        user.getModel().find( { username: usrn } ).then(
+            (result) => {
+                return res.status(200).json( result );
+            }
+        ).catch(
+            (reason) => {
+                return next({ statusCode:404, error: true, errormessage: "DB error: "+reason });
+            }
+        );
+    } else {
+        let skip = parseInt( req.query.skip as string || "0" ) || 0;
+        let limit = parseInt( req.query.limit as string || "20" ) || 20;
+
+        user.getModel().find( { } ).sort({timestamp:-1}).skip( skip ).limit( limit ).then( 
+            (documents) => { return res.status(200).json( documents ); }
+        ).catch( 
+            (reason) => { return next({ statusCode:404, error: true, errormessage: "DB error: "+reason }); }
+        );
+    }
+    
 });
 
 app.post('/users', (req, res, next) => {
@@ -520,6 +533,12 @@ declare global {
             birthday: Date,
             role: user.Roles
         }
+        
+        interface Request {
+            auth: {
+                username: string;
+            }
+        }
     }
 }
 
@@ -529,7 +548,6 @@ declare global {
 passport.use( new passportHTTP.BasicStrategy(
     function(usrn, password, done) {
         console.log("New login attempt from " + usrn);
-        console.log(password);
         
         user.getModel().find( { username: usrn }).then(
             (response) => {
@@ -538,23 +556,22 @@ passport.use( new passportHTTP.BasicStrategy(
                 let user = response[0];
 
                 if (user.checkPassword(password)) {
-                    done(null, user);
+                    return done(null, user);
                 }
+
+                return done(null,false,{statusCode: 500, error: true, errormessage:"Invalid password"});
+            }
+        ).catch(
+            (reason) => {
+                return done(null, false, { statusCode:404, error: true, errormessage: "DB error: "+reason });
             }
         );
-        
     }
 ));
 
 // Login endpoint uses passport middleware to check
 // user credentials before generating a new JWT
 app.get("/login", passport.authenticate('basic', { session: false }), (req,res) => {
-
-    // If we reach this point, the user is successfully authenticated and
-    // has been injected into req.user
-  
-    // We now generate a JWT with the useful user data
-    // and return it as response
   
     let tokendata = {
         birthday: req.user.birthday,
@@ -564,7 +581,7 @@ app.get("/login", passport.authenticate('basic', { session: false }), (req,res) 
         username: req.user.username
     };
   
-    console.log("Login granted. Generating token".green );
+    console.log("Login granted. Generating token...".green );
     let token_signed = jsonwebtoken.sign(tokendata, process.env.JWT_SECRET, { expiresIn: '1h' } );
   
     return res.status(200).json({ error: false, errormessage: "", token: token_signed });
