@@ -232,7 +232,7 @@ app.get('/users/:username?', auth, (req, res, next) => {
     if (req.params.username) {
         let usrn = req.params.username;
 
-        user.getModel().find( { _id: usrn } ).then(
+        user.getModel().findOne( { _id: usrn } ).then(
             (result) => {
                 return res.status(200).json( result );
             }
@@ -278,7 +278,7 @@ app.post('/users', (req, res, next) => {
 app.delete('/users/:username', auth, (req, res, next) => {
     let usrn = req.params.username;
 
-    user.getModel().deleteOne({username: usrn}).then(
+    user.getModel().deleteOne({_id: usrn}).then(
         ( q ) => {
             if( q.deletedCount > 0 ) {
                 console.log("User removed from the system".green);
@@ -445,7 +445,7 @@ app.get('/tables/:id?', auth, (req, res, next) => {
     if (req.params.id) {
         let id = req.params.id;
         
-        table.getModel().find( {_id: id } ).then(
+        table.getModel().findOne( {_id: id } ).then(
             (result) => { return res.status(200).json( result ); }
         ).catch( 
             (reason) => { return next({ statusCode:404, error: true, errormessage: "DB error: "+reason }); }
@@ -518,7 +518,7 @@ app.delete('/tables/:id', auth, (req, res, next) => {
 declare global {
     namespace Express {
         interface User {
-            username: string,
+            _id: string,
             name: string,
             surname: string,
             birthday: Date,
@@ -527,7 +527,7 @@ declare global {
         
         interface Request {
             auth: {
-                username: string;
+                _id: string;
             }
         }
     }
@@ -540,7 +540,7 @@ passport.use( new passportHTTP.BasicStrategy(
     function(usrn, password, done) {
         console.log("New login attempt from " + usrn);
         
-        user.getModel().find( { username: usrn }).then(
+        user.getModel().find( { _id: usrn }).then(
             (response) => {
                 if (!response[0]) return done(null,false,{statusCode: 500, error: true, errormessage:"Invalid user"});
                 
@@ -569,7 +569,7 @@ app.get("/login", passport.authenticate('basic', { session: false }), (req,res) 
         name: req.user.name,
         surname: req.user.surname,
         role: req.user.role,
-        username: req.user.username
+        _id: req.user._id
     };
   
     console.log("Login granted. Generating token...".green );
@@ -604,7 +604,7 @@ mongoose.connect( 'mongodb://mymongo:27017/restaurant_manager' )
 .then( 
     () => {
         console.log("Connected to MongoDB".green);
-        return user.getModel().findOne( {username:"admin"} );
+        return user.getModel().findOne( {_id:"admin"} );
     }
 ).then(
     (doc) => {
