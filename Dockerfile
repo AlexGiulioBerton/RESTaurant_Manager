@@ -8,5 +8,5 @@ COPY . /app
 RUN npm install
 RUN npm run compile
 
-# CMD node server
+RUN npm run start
 
