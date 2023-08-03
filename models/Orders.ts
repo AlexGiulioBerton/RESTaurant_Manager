@@ -8,7 +8,7 @@ export interface Order extends mongoose.Document {
     time: Date,
     dishesStatus: mongoose.Schema.Types.Number, // status of preparation for the dishes (0 -> in queue, 1-> in preparation, 2 -> ready, 3 -> delivered)
     drinksStatus: mongoose.Schema.Types.Number, // status of preparation for the drinks (0 -> in queue, 1-> in preparation, 2 -> ready, 3 -> delivered)
-    waiter: mongoose.Schema.Types.ObjectId      // reference to a user (waiter)
+    waiter: string      // reference to a user (waiter)
 };
 
 
@@ -41,7 +41,7 @@ const orderSchema = new mongoose.Schema<Order>({
         required: true
     },
     waiter: {
-        type: mongoose.Schema.Types.ObjectId, 
+        type: mongoose.Schema.Types.String, 
         ref: 'User',
         required: true
     }

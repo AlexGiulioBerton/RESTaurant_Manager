@@ -232,7 +232,7 @@ app.get('/users/:username?', auth, (req, res, next) => {
     if (req.params.username) {
         let usrn = req.params.username;
 
-        user.getModel().find( { username: usrn } ).then(
+        user.getModel().find( { _id: usrn } ).then(
             (result) => {
                 return res.status(200).json( result );
             }
@@ -255,31 +255,22 @@ app.get('/users/:username?', auth, (req, res, next) => {
 });
 
 app.post('/users', (req, res, next) => {
-    user.getModel().find({username: req.body.username}).count().then(
-        (count) => {
-            if (count == 0) {
-                let u = user.newUser(req.body);
+    let u = user.newUser(req.body);
 
-                if( !req.body.password ) {
-                    return next({ statusCode:404, error: true, errormessage: "Password field missing"} );
-                }
+    if( !req.body.password ) {
+        return next({ statusCode:404, error: true, errormessage: "Password field missing"} );
+    }
 
-                u.setPassword(req.body.password);
+    u.setPassword(req.body.password);
 
-                u.save().then(
-                    (data) => {
-                        console.log("User added to the db".green);
-                        return res.status(200).json({error: false, errormessage: "", id: data._id})
-                    }
-                ).catch(
-                    (reason) => {
-                        return next({ statusCode:404, error: true, errormessage: "DB error: "+reason.errmsg });
-                    }
-                );
-            } else {
-                console.log("User already exists inside db".red);
-                return next({statusCode:404, error:true, errormessage: "User already exists"} );
-            }
+    u.save().then(
+        (data) => {
+            console.log("User added to the db".green);
+            return res.status(200).json({error: false, errormessage: "", id: data._id})
+        }
+    ).catch(
+        (reason) => {
+            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason.errmsg });
         }
     );
 });
@@ -316,7 +307,7 @@ app.delete('/users/:username', auth, (req, res, next) => {
 app.get('/dishes/:id?', auth, (req, res, next) => {
     if (req.params.id) {
         let id = req.params.id;
-        dish.getModel().find( {_id: id } ).then(
+        dish.getModel().findOne( {_id: id } ).then(
             (result) => { return res.status(200).json( result ); }
         ).catch( 
             (reason) => { return next({ statusCode:404, error: true, errormessage: "DB error: "+reason }); }
@@ -385,7 +376,7 @@ app.get('/drinks/:id?', auth, (req, res, next) => {
     if (req.params.id) {
         let id = req.params.id;
         
-        drink.getModel().find( {_id: id } ).then(
+        drink.getModel().findOne( {_id: id } ).then(
             (result) => { return res.status(200).json( result ); }
         ).catch( 
             (reason) => { return next({ statusCode:404, error: true, errormessage: "DB error: "+reason }); }
@@ -621,7 +612,7 @@ mongoose.connect( 'mongodb://mymongo:27017/restaurant_manager' )
             console.log("Creating admin user");
 
             let u = user.newUser({
-                username: "admin",
+                _id: "admin",
                 mail: "admin@restaurantmanager.it",
                 name: "Administrator",
                 surname: "",

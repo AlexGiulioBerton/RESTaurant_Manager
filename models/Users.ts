@@ -4,7 +4,6 @@ import crypto = require('crypto');
 export enum Roles { Waiter = 1, Cook, Bartender, Cashier, Admin };
 
 export interface User extends mongoose.Document {
-    username: string,
     digestpwd: string, // hashed password
     salt: string,
     role: number,
@@ -19,10 +18,8 @@ export interface User extends mongoose.Document {
 };
 
 const userSchema = new mongoose.Schema<User>({
-    username: {
-        type: mongoose.SchemaTypes.String,
-        required: true,
-        unique: true
+    _id: {
+        type: mongoose.SchemaTypes.String
     },
     digestpwd: {
         type: mongoose.SchemaTypes.String,
