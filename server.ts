@@ -159,6 +159,7 @@ app.post('/orders', (req, res, next) => {
 
     o.save().then(
         (data) => {
+            ios.emit('broadcast', data);
             console.log("Order added to the db".green);
             return res.status(200).json({error: false, errormessage: "", id: data._id})
         }
@@ -186,6 +187,8 @@ app.put('/orders/:id/dishstatus', (req, res, next) => {
 
 app.put('/orders/:id/drinkstatus', (req, res, next) => {
     let id = req.params.id;
+
+    console.log(req.body);
 
     order.getModel().updateOne( { _id: id }, req.body ).then(
         (data) => {
@@ -332,6 +335,7 @@ app.post('/dishes', auth, (req, res, next) => {
 
     new_dish.save().then(
         (data) => {
+            ios.emit('broadcast', data );
             console.log("Dish added to the db".green);
             return res.status(200).json({error: false, errormessage: "", id: data._id})
         }
@@ -401,6 +405,7 @@ app.post('/drinks', auth, (req, res, next) => {
 
     new_drink.save().then(
         (data) => {
+            ios.emit('broadcast', data );
             console.log("Drink added to the db".green);
             return res.status(200).json({error: false, errormessage: "", id: data._id})
         }
@@ -447,7 +452,7 @@ app.get('/tables/:id?', auth, (req, res, next) => {
         
         table.getModel().findOne( {_id: id } ).then(
             (result) => { return res.status(200).json( result ); }
-        ).catch( 
+        ).catch(
             (reason) => { return next({ statusCode:404, error: true, errormessage: "DB error: "+reason }); }
         )
     } else {
@@ -470,6 +475,7 @@ app.post('/tables', auth, (req, res, next) => {
 
     new_table.save().then(
         (data) => {
+            ios.emit('broadcast', data);
             console.log("Table added to the db".green);
             return res.status(200).json({error: false, errormessage: "", id: data._id})
         }

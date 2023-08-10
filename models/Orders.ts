@@ -6,8 +6,8 @@ export interface Order extends mongoose.Document {
     drinks: [mongoose.Schema.Types.ObjectId],   // array of drinks
     table: mongoose.Schema.Types.ObjectId       // reference to a table
     time: Date,
-    dishesStatus: mongoose.Schema.Types.Number, // status of preparation for the dishes (0 -> in queue, 1-> in preparation, 2 -> ready, 3 -> delivered)
-    drinksStatus: mongoose.Schema.Types.Number, // status of preparation for the drinks (0 -> in queue, 1-> in preparation, 2 -> ready, 3 -> delivered)
+    dishesStatus: mongoose.Schema.Types.Number, // status of preparation for the dishes (0 -> in queue, 1-> in preparation, 2 -> ready, 3 -> served)
+    drinksStatus: mongoose.Schema.Types.Number, // status of preparation for the drinks (0 -> in queue, 1-> in preparation, 2 -> ready, 3 -> served)
     waiter: string      // reference to a user (waiter)
 };
 
