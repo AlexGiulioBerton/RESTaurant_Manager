@@ -27,6 +27,17 @@ const drinkSchema = new mongoose.Schema<Drink>({
     },
 });
 
+export function isDrink(arg: any): arg is Drink {
+    return arg &&
+           arg.name &&
+           typeof(arg.name) == 'string' &&
+           arg.ingredients &&
+           Array.isArray(arg.ingredients) &&
+           arg.price &&
+           typeof(arg.price) == 'number' &&
+           arg.menuCategory &&
+           typeof(arg.menuCategory) == 'string';
+}
 
 export function getSchema() { return drinkSchema; }
 

@@ -37,6 +37,21 @@ const dishSchema = new mongoose.Schema<Dish>({
     },
 });
 
+export function isDish(arg: any): arg is Dish {
+    return arg &&
+           arg.name &&
+           typeof(arg.name) == 'string' &&
+           arg.ingredients &&
+           Array.isArray(arg.ingredients) &&
+           arg.recipe &&
+           typeof(arg.recipe) == 'string' &&
+           arg.cookingTime &&
+           typeof(arg.cookingTime) == 'number' && 
+           arg.price &&
+           typeof(arg.price) == 'number' &&
+           arg.menuCategory &&
+           typeof(arg.menuCategory) == 'string';
+}
 
 export function getSchema() { return dishSchema; }
 

@@ -130,21 +130,18 @@ app.get("/", (req,res) => {
 app.get('/orders/:id?', auth, (req, res, next) => {
     if (req.params.id) {
         let id = req.params.id;
-        order.getModel().findOne( {_id: id } ).then(
-            (result) => { return res.status(200).json( result ); }
+        order.getModel().findOne( {_id: id } ).sort({table: 1}).then(
+            (result) => { console.log(result); return res.status(200).json( result ); }
         ).catch( 
             (reason) => { return next({ statusCode:404, error: true, errormessage: "DB error: "+reason }); }
         )
     } else {
         let skip = parseInt( req.query.skip as string || "0" ) || 0;
-        let limit = parseInt( req.query.limit as string || "20" ) || 20;
+        let limit = parseInt( req.query.limit as string || "50" ) || 50;
         let t = req.query.table;
-        let s = req.query.status;
         let filter = { };
         
-        if (t && s) filter = { table: t, status: s };
-        else if (t && !s) filter = { table: t };
-        else if (!t && s) filter = { status: s };
+        if (t) filter = { table: t };
 
         order.getModel().find( filter ).sort({timestamp:-1}).skip( skip ).limit( limit ).then( 
             (documents) => { return res.status(200).json( documents ); }
@@ -154,27 +151,32 @@ app.get('/orders/:id?', auth, (req, res, next) => {
     }
 });
 
-app.post('/orders', (req, res, next) => {
-    let o = order.newOrder(req.body);
+app.post('/orders', auth, (req, res, next) => {
+    if (order.isOrder(req.body)) {
+        let o = order.newOrder(req.body);
 
-    o.save().then(
-        (data) => {
-            ios.emit('broadcast', data);
-            console.log("Order added to the db".green);
-            return res.status(200).json({error: false, errormessage: "", id: data._id})
-        }
-    ).catch(
-        (reason) => {
-            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason.errmsg });
-        }
-    )
+        o.save().then(
+            (data) => {
+                ios.emit('orders', data);
+                console.log("Order added to the db".green);
+                return res.status(200).json({error: false, errormessage: "", id: data._id})
+            }
+        ).catch(
+            (reason) => {
+                return next({ statusCode:404, error: true, errormessage: "DB error: "+reason.errmsg });
+            }
+        )
+    } else
+        return next({ statusCode:404, error: true, errormessage: "Data is not a valid Order" });
+    
 });
 
-app.put('/orders/:id/dishstatus', (req, res, next) => {
+app.put('/orders/:id/dishstatus', auth, (req, res, next) => {
     let id = req.params.id;
 
     order.getModel().updateOne( { _id: id }, req.body ).then(
         (data) => {
+            ios.emit('orders', data);
             console.log("Dishes status modified".green);
             return res.status(200).json( { error: false, errormessage: "", elements_modified: data.matchedCount} );
         }
@@ -185,13 +187,14 @@ app.put('/orders/:id/dishstatus', (req, res, next) => {
     )
 });
 
-app.put('/orders/:id/drinkstatus', (req, res, next) => {
+app.put('/orders/:id/drinkstatus', auth, (req, res, next) => {
     let id = req.params.id;
 
     console.log(req.body);
 
     order.getModel().updateOne( { _id: id }, req.body ).then(
         (data) => {
+            ios.emit('orders', data);
             console.log("Drinks status modified".green);
             return res.status(200).json( { error: false, errormessage: "", elements_modified: data.matchedCount} );
         }
@@ -208,6 +211,7 @@ app.delete('/orders/:id', auth, (req, res, next) => {
     order.getModel().deleteOne( { _id: order_id } ).then(
         ( q ) => {
             if( q.deletedCount > 0 ) {
+                ios.emit('orders', q);
                 console.log("Order deleted".green);
                 return res.status(200).json( {error:false, errormessage:""} );
             } else
@@ -268,6 +272,7 @@ app.post('/users', (req, res, next) => {
 
     u.save().then(
         (data) => {
+            ios.emit('users', data);
             console.log("User added to the db".green);
             return res.status(200).json({error: false, errormessage: "", id: data._id})
         }
@@ -284,6 +289,7 @@ app.delete('/users/:username', auth, (req, res, next) => {
     user.getModel().deleteOne({_id: usrn}).then(
         ( q ) => {
             if( q.deletedCount > 0 ) {
+                ios.emit('users', q);
                 console.log("User removed from the system".green);
                 return res.status(200).json( {error:false, errormessage:""} );
             } else 
@@ -331,19 +337,23 @@ app.get('/dishes/:id?', auth, (req, res, next) => {
 });
 
 app.post('/dishes', auth, (req, res, next) => {
-    let new_dish = dish.newDish(req.body);
 
-    new_dish.save().then(
-        (data) => {
-            ios.emit('broadcast', data );
-            console.log("Dish added to the db".green);
-            return res.status(200).json({error: false, errormessage: "", id: data._id})
-        }
-    ).catch(
-        (reason) => {
-            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason.errmsg });
-        }
-    );
+    if (dish.isDish(req.body)) {
+        let new_dish = dish.newDish(req.body);
+
+        new_dish.save().then(
+            (data) => {
+                ios.emit('dishes', data );
+                console.log("Dish added to the db".green);
+                return res.status(200).json({error: false, errormessage: "", id: data._id})
+            }
+        ).catch(
+            (reason) => {
+                return next({ statusCode:404, error: true, errormessage: "DB error: "+reason.errmsg });
+            }
+        );
+    } else
+        return next({ statusCode:404, error: true, errormessage: "Data is not a valid Dish" });
 });
 
 app.delete('/dishes/:id', auth, (req, res, next) => {
@@ -351,9 +361,10 @@ app.delete('/dishes/:id', auth, (req, res, next) => {
 
     dish.getModel().deleteOne( {_id: id } ).then( 
         ( q ) => {
-          if( q.deletedCount > 0 ) 
+          if( q.deletedCount > 0 ) {
+            ios.emit('dishes', q );
             return res.status(200).json( {error:false, errormessage:""} );
-
+          }
           else 
             return res.status(404).json( {error:true, errormessage:"Invalid dish ID"} );
         }
@@ -401,19 +412,22 @@ app.get('/drinks/:id?', auth, (req, res, next) => {
 });
 
 app.post('/drinks', auth, (req, res, next) => {
-    let new_drink = drink.newDrink(req.body);
+    if (drink.isDrink(req.body)) {
+        let new_drink = drink.newDrink(req.body);
 
-    new_drink.save().then(
-        (data) => {
-            ios.emit('broadcast', data );
-            console.log("Drink added to the db".green);
-            return res.status(200).json({error: false, errormessage: "", id: data._id})
-        }
-    ).catch(
-        (reason) => {
-            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason.errmsg });
-        }
-    );
+        new_drink.save().then(
+            (data) => {
+                ios.emit('drinks', data );
+                console.log("Drink added to the db".green);
+                return res.status(200).json({error: false, errormessage: "", id: data._id})
+            }
+        ).catch(
+            (reason) => {
+                return next({ statusCode:404, error: true, errormessage: "DB error: "+reason.errmsg });
+            }
+        );
+    } else
+        return next({ statusCode:404, error: true, errormessage: "Data is not a valid Drink" });
 });
 
 app.delete('/drinks/:id', auth, (req, res, next) => {
@@ -421,9 +435,10 @@ app.delete('/drinks/:id', auth, (req, res, next) => {
 
     drink.getModel().deleteOne( {_id: id } ).then( 
         ( q ) => {
-          if( q.deletedCount > 0 ) 
+          if( q.deletedCount > 0 ) {
+            ios.emit('drinks', q );
             return res.status(200).json( {error:false, errormessage:""} );
-
+          }
           else 
             return res.status(404).json( {error:true, errormessage:"Invalid drink ID"} );
         }
@@ -471,19 +486,22 @@ app.get('/tables/:id?', auth, (req, res, next) => {
 });
 
 app.post('/tables', auth, (req, res, next) => {
-    let new_table = table.newTable(req.body);
+    if (table.isTable(req.body)) {
+        let new_table = table.newTable(req.body);
 
-    new_table.save().then(
-        (data) => {
-            ios.emit('broadcast', data);
-            console.log("Table added to the db".green);
-            return res.status(200).json({error: false, errormessage: "", id: data._id})
-        }
-    ).catch(
-        (reason) => {
-            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason.errmsg });
-        }
-    );
+        new_table.save().then(
+            (data) => {
+                ios.emit('tables', data);
+                console.log("Table added to the db".green);
+                return res.status(200).json({error: false, errormessage: "", id: data._id})
+            }
+        ).catch(
+            (reason) => {
+                return next({ statusCode:404, error: true, errormessage: "DB error: "+reason.errmsg });
+            }
+        );
+    } else
+        return next({ statusCode:404, error: true, errormessage: "Data is not a valid Table" });
 });
 
 app.put('/tables/:id/occupied', auth, (req, res, next) => {
@@ -638,10 +656,12 @@ mongoose.connect( 'mongodb://mymongo:27017/restaurant_manager' )
     (info) => {
         if (info == 0) {
             console.log("Adding some dishes into the database");
-            let d1 = dish.getModel().create({name: "Pasta al pomodoro", ingredients: ["Penne", "Pomodoro", "Basilico", "Olio extravergine d'oliva"], recipe: "Pesare la pasta, portare ad ebollizione l'acqua, cucinare la pasta, condire la pasta con il sugo di pomodoro e olio a piacere", cookingTime: 30, price: 6.99, menuCategory: "PRIMI PIATTI"});
-            let d2 = dish.getModel().create({name: "Tagliata di carne", ingredients: ["Tagliata di manzo", "Pomodorini", "Rucola", "Olio extravergine d'oliva"], cookingTime: 40, price: 14.99, menuCategory: "SECONDI PIATTI"});
-            let d3 = dish.getModel().create({name: "Bicchiere di Tiramisù", ingredients: ["Mascarpone", "Uova", "Caffè", "Savoiardi", "Zucchero", "Cacao amaro"], cookingTime: 10, price: 3.50, menuCategory: "DOLCI"});
-            return Promise.all([d1, d2, d3]);
+            let d1 = dish.getModel().create({name: "Rigatoni Amatriciana", ingredients: ["Rigatoni", "Tomato sauce", "Bacon", "Basil"], recipe: "Weigh the pasta, bring the water to the boil, cook the pasta, mix the pasta with the sauce and oil to taste", cookingTime: 20, price: 6.99, menuCategory: "FIRST COURSE"});
+            let d2 = dish.getModel().create({name: "Spaghetti Bolognese", ingredients: ["Spaghetti", "Tomato sauce", "Meat", "Basil", "Carrots", "Onion"], recipe: "Weigh the pasta, bring the water to the boil, cook the pasta, mix the pasta with the meat sauce and add some tomatoes", cookingTime: 20, price: 7.99, menuCategory: "FIRST COURSE"});
+            let d3 = dish.getModel().create({name: "Cut of Meat", ingredients: ["Beef", "Cherry tomatoes", "Rocket", "Olive oil"], cookingTime: 25, price: 14.99, menuCategory: "SECOND COURSE"});
+            let d4 = dish.getModel().create({name: "Fish and Chips", ingredients: ["Fish", "Flour", "Frying oil", "French fries"], cookingTime: 15, price: 6, menuCategory: "SECOND COURSE"});
+            let d5 = dish.getModel().create({name: "Tiramisù", ingredients: ["Mascarpone cheese", "Eggs", "Coffee", "Finger biscuits", "Sugar", "Bitter cocoa"], cookingTime: 3, price: 3.50, menuCategory: "SWEETS"});
+            return Promise.all([d1, d2, d3, d4, d5]);
         }
     }
 ).then(
@@ -652,10 +672,12 @@ mongoose.connect( 'mongodb://mymongo:27017/restaurant_manager' )
     (info) => {
         if (info == 0) {
             console.log("Adding some drinks into the database");
-            let d1 = drink.getModel().create({name: "Coca Cola", price: 2.50, menuCategory: "BEVANDE"});
-            let d2 = drink.getModel().create({name: "Acqua minerale", price: 1.50, menuCategory: "BEVANDE"});
-            let d3 = drink.getModel().create({name: "Vino Rosso", price: 4.50, menuCategory: "VINI"});
-            return Promise.all([d1, d2, d3]);
+            let d1 = drink.getModel().create({name: "Coca Cola", price: 2.50, menuCategory: "BEVERAGES"});
+            let d2 = drink.getModel().create({name: "Still water", price: 1.50, menuCategory: "BEVERAGES"});
+            let d3 = drink.getModel().create({name: "Sparkling water", price: 1.50, menuCategory: "BEVERAGES"});
+            let d4 = drink.getModel().create({name: "Red wine", price: 4.50, menuCategory: "WINES & STRONGDRINKS"});
+            let d5 = drink.getModel().create({name: "Macchiato", price: 1, menuCategory: "COFFEE"});
+            return Promise.all([d1, d2, d3, d4, d5]);
         }
     }
 ).then(

@@ -6,8 +6,8 @@ export interface Order extends mongoose.Document {
     drinks: [mongoose.Schema.Types.ObjectId],   // array of drinks
     table: mongoose.Schema.Types.ObjectId       // reference to a table
     time: Date,
-    dishesStatus: mongoose.Schema.Types.Number, // status of preparation for the dishes (0 -> in queue, 1-> in preparation, 2 -> ready, 3 -> served)
-    drinksStatus: mongoose.Schema.Types.Number, // status of preparation for the drinks (0 -> in queue, 1-> in preparation, 2 -> ready, 3 -> served)
+    dishesStatus: mongoose.Schema.Types.Number, // status of preparation for the dishes (0 -> in queue, 1-> in preparation, 2 -> ready, 3 -> served, 4 -> paid)
+    drinksStatus: mongoose.Schema.Types.Number, // status of preparation for the drinks (0 -> in queue, 1-> in preparation, 2 -> ready, 3 -> served, 4 -> paid)
     waiter: string      // reference to a user (waiter)
 };
 
@@ -46,6 +46,24 @@ const orderSchema = new mongoose.Schema<Order>({
         required: true
     }
 });
+
+export function isOrder(arg: any): arg is Order {
+    return arg &&
+           arg.dishes &&
+           Array.isArray(arg.dishes) &&
+           arg.drinks &&
+           Array.isArray(arg.drinks) &&
+           arg.table &&
+           typeof(arg.table) == 'string' &&
+           arg.time &&
+           arg.time instanceof Date && 
+           arg.dishesStatus &&
+           typeof(arg.dishesStatus) == 'number' &&
+           arg.drinksStatus &&
+           typeof(arg.drinksStatus) == 'number' &&
+           arg.waiter &&
+           typeof(arg.waiter) == 'string';
+}
 
 
 export function getSchema() { return orderSchema; }

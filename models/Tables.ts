@@ -25,6 +25,16 @@ const tableSchema = new mongoose.Schema<Table>({
     }
 });
 
+export function isTable(arg: any): arg is Table {
+    return arg &&
+           arg.number &&
+           typeof(arg.number) == 'number' &&
+           arg.seats &&
+           typeof(arg.seats) == 'number' &&
+           arg.occupiedSeats &&
+           typeof(arg.occupiedSeats) == 'number';
+}
+
 tableSchema.methods.getTableInfo = function(): string {
     return "<Table[code: " + this.number + ", #seats: " + this.seats + "]>";
 };
