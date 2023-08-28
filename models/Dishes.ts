@@ -45,9 +45,9 @@ export function isDish(arg: any): arg is Dish {
            Array.isArray(arg.ingredients) &&
            arg.recipe &&
            typeof(arg.recipe) == 'string' &&
-           arg.cookingTime &&
+           arg.cookingTime !== undefined &&
            typeof(arg.cookingTime) == 'number' && 
-           arg.price &&
+           arg.price !== undefined &&
            typeof(arg.price) == 'number' &&
            arg.menuCategory &&
            typeof(arg.menuCategory) == 'string';

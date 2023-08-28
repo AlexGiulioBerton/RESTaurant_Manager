@@ -56,10 +56,9 @@ export function isOrder(arg: any): arg is Order {
            arg.table &&
            typeof(arg.table) == 'string' &&
            arg.time &&
-           arg.time instanceof Date && 
-           arg.dishesStatus &&
+           arg.dishesStatus !== undefined &&
            typeof(arg.dishesStatus) == 'number' &&
-           arg.drinksStatus &&
+           arg.drinksStatus !== undefined &&
            typeof(arg.drinksStatus) == 'number' &&
            arg.waiter &&
            typeof(arg.waiter) == 'string';

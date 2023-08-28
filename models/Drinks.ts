@@ -33,7 +33,7 @@ export function isDrink(arg: any): arg is Drink {
            typeof(arg.name) == 'string' &&
            arg.ingredients &&
            Array.isArray(arg.ingredients) &&
-           arg.price &&
+           arg.price !== undefined &&
            typeof(arg.price) == 'number' &&
            arg.menuCategory &&
            typeof(arg.menuCategory) == 'string';

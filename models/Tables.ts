@@ -27,11 +27,11 @@ const tableSchema = new mongoose.Schema<Table>({
 
 export function isTable(arg: any): arg is Table {
     return arg &&
-           arg.number &&
+           arg.number !== undefined &&
            typeof(arg.number) == 'number' &&
-           arg.seats &&
+           arg.seats !== undefined &&
            typeof(arg.seats) == 'number' &&
-           arg.occupiedSeats &&
+           arg.occupiedSeats !== undefined &&
            typeof(arg.occupiedSeats) == 'number';
 }
 
