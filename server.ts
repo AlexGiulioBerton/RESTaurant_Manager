@@ -30,19 +30,19 @@
 
 
 const result = require('dotenv').config();          // dotenv module will load the file named '.env' and all the key-value
-                                                    // pairs into process.env environment variable
+// pairs into process.env environment variable
 
 if (result.error) {
     console.log("Unable to load \".env\" file. Please provide one to store the JWT secret key");
     process.exit(-1);
 }
 
-if( !process.env.JWT_SECRET ) {
+if (!process.env.JWT_SECRET) {
     console.log("\".env\" file loaded but JWT_SECRET=<secret> key-value pair was not found");
     process.exit(-1);
 }
 
-if( !process.env.PORT ) {
+if (!process.env.PORT) {
     console.log("\".env\" file loaded but PORT=<value> key-value pair was not found");
     process.exit(-1);
 }
@@ -61,14 +61,14 @@ import passport = require('passport');           // authentication middleware fo
 import passportHTTP = require('passport-http');  // implements Basic and Digest authentication for HTTP (used for /login endpoint)
 import jsonwebtoken = require('jsonwebtoken');  // JWT generation
 import cors = require('cors');                  // Enable CORS middleware
-const io = require('socket.io');               // Socket.io websocket library
 const { expressjwt: jwt } = require('express-jwt');            // JWT parsing middleware for express
 colors.enabled = true;
+const io = require('socket.io');               // Socket.io websocket library
 
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-let auth = jwt( {
-    secret: process.env.JWT_SECRET, 
+let auth = jwt({
+    secret: process.env.JWT_SECRET,
     algorithms: ["HS256"]
 });
 
@@ -79,7 +79,7 @@ app.use(cors());
 app.use(express.json());
 app.use(passport.initialize())
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended:true}));
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(function (req, _, next) {
     console.log();
@@ -93,6 +93,7 @@ app.use(function (req, _, next) {
 
     console.log(("Time: " + new Date()).gray);
     console.log();
+
     next();
 });
 
@@ -108,11 +109,11 @@ app.use(function (req, _, next) {
  Endpoint: /
 */
 
-app.get("/", (req,res) => {
-    res.status(200).json( { 
-        api_version: "1.0", 
-        endpoints: [ "/dishes", "/drinks", "/tables", "/orders", "/users", "/login" ] 
-    } );
+app.get("/", (req, res) => {
+    res.status(200).json({
+        api_version: "1.0",
+        endpoints: ["/dishes", "/drinks", "/tables", "/orders", "/users", "/login"]
+    });
 });
 
 
@@ -130,98 +131,109 @@ app.get("/", (req,res) => {
 app.get('/orders/:id?', auth, (req, res, next) => {
     if (req.params.id) {
         let id = req.params.id;
-        order.getModel().findOne( {_id: id } ).sort({table: 1}).then(
-            (result) => { console.log(result); return res.status(200).json( result ); }
-        ).catch( 
-            (reason) => { return next({ statusCode:404, error: true, errormessage: "DB error: "+reason }); }
+        order.getModel().findOne({ _id: id }).sort({ table: 1 }).then(
+            (result) => { console.log(result); return res.status(200).json(result); }
+        ).catch(
+            (reason) => { return next({ statusCode: 404, error: true, errormessage: "DB error: " + reason }); }
         )
     } else {
-        let skip = parseInt( req.query.skip as string || "0" ) || 0;
-        let limit = parseInt( req.query.limit as string || "50" ) || 50;
+        let skip = parseInt(req.query.skip as string || "0") || 0;
+        let limit = parseInt(req.query.limit as string || "50") || 50;
         let t = req.query.table;
-        let filter = { };
-        
+        let filter = {};
+
         if (t) filter = { table: t };
 
-        order.getModel().find( filter ).sort({timestamp:-1}).skip( skip ).limit( limit ).then( 
-            (documents) => { return res.status(200).json( documents ); }
-        ).catch( 
-            (reason) => { return next({ statusCode:404, error: true, errormessage: "DB error: "+reason }); }
+        order.getModel().find(filter).sort({ timestamp: -1 }).skip(skip).limit(limit).then(
+            (documents) => { return res.status(200).json(documents); }
+        ).catch(
+            (reason) => { return next({ statusCode: 404, error: true, errormessage: "DB error: " + reason }); }
         );
     }
 });
 
 app.post('/orders', auth, (req, res, next) => {
-    if (order.isOrder(req.body)) {
-        let o = order.newOrder(req.body);
+    if (req.auth.role == 1) {
+        if (order.isOrder(req.body)) {
+            let o = order.newOrder(req.body);
 
-        o.save().then(
-            (data) => {
-                ios.emit('orders', data);
-                console.log("Order added to the db".green);
-                return res.status(200).json({error: false, errormessage: "", id: data._id})
-            }
-        ).catch(
-            (reason) => {
-                return next({ statusCode:404, error: true, errormessage: "DB error: "+reason.errmsg });
-            }
-        )
+            o.save().then(
+                (data) => {
+                    ios.emit('orders', data);
+                    console.log("Order added to the db".green);
+                    return res.status(200).json({ error: false, errormessage: "", id: data._id })
+                }
+            ).catch(
+                (reason) => {
+                    return next({ statusCode: 404, error: true, errormessage: "DB error: " + reason.errmsg });
+                }
+            )
+        } else
+            return next({ statusCode: 404, error: true, errormessage: "Data is not a valid Order" });
     } else
-        return next({ statusCode:404, error: true, errormessage: "Data is not a valid Order" });
-    
+        return next({ statusCode: 404, error: true, errormessage: "Insufficient credentials to access the feature" });
 });
 
 app.put('/orders/:id/dishstatus', auth, (req, res, next) => {
-    let id = req.params.id;
+    if (req.auth.role == 2 || req.auth.role == 3) {
+        let id = req.params.id;
 
-    order.getModel().updateOne( { _id: id }, req.body ).then(
-        (data) => {
-            ios.emit('orders', data);
-            console.log("Dishes status modified".green);
-            return res.status(200).json( { error: false, errormessage: "", elements_modified: data.matchedCount} );
-        }
-    ).catch(
-        (reason) => {
-            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason });
-        }
-    )
+        order.getModel().updateOne({ _id: id }, req.body).then(
+            (data) => {
+                ios.emit('orders', data);
+                console.log("Dishes status modified".green);
+                return res.status(200).json({ error: false, errormessage: "", elements_modified: data.matchedCount });
+            }
+        ).catch(
+            (reason) => {
+                return next({ statusCode: 404, error: true, errormessage: "DB error: " + reason });
+            }
+        )
+    } else
+        return next({ statusCode: 404, error: true, errormessage: "Insufficient credentials to access the feature" });
 });
 
 app.put('/orders/:id/drinkstatus', auth, (req, res, next) => {
-    let id = req.params.id;
+    if (req.auth.role == 2 || req.auth.role == 3) {
+        let id = req.params.id;
 
-    console.log(req.body);
+        console.log(req.body);
 
-    order.getModel().updateOne( { _id: id }, req.body ).then(
-        (data) => {
-            ios.emit('orders', data);
-            console.log("Drinks status modified".green);
-            return res.status(200).json( { error: false, errormessage: "", elements_modified: data.matchedCount} );
-        }
-    ).catch(
-        (reason) => {
-            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason });
-        }
-    )
+        order.getModel().updateOne({ _id: id }, req.body).then(
+            (data) => {
+                ios.emit('orders', data);
+                console.log("Drinks status modified".green);
+                return res.status(200).json({ error: false, errormessage: "", elements_modified: data.matchedCount });
+            }
+        ).catch(
+            (reason) => {
+                return next({ statusCode: 404, error: true, errormessage: "DB error: " + reason });
+            }
+        )
+    } else
+        return next({ statusCode: 404, error: true, errormessage: "Insufficient credentials to access the feature" });
 });
 
 app.delete('/orders/:id', auth, (req, res, next) => {
-    let order_id = req.params.id;
+    if (req.auth.role == 4 || req.auth.role == 5) {
+        let order_id = req.params.id;
 
-    order.getModel().deleteOne( { _id: order_id } ).then(
-        ( q ) => {
-            if( q.deletedCount > 0 ) {
-                ios.emit('orders', q);
-                console.log("Order deleted".green);
-                return res.status(200).json( {error:false, errormessage:""} );
-            } else
-                return res.status(404).json( {error:true, errormessage:"Invalid order id"} );
-        }
-    ).catch( 
-        (reason)=> {
-            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason });
-        }
-    );
+        order.getModel().deleteOne({ _id: order_id }).then(
+            (q) => {
+                if (q.deletedCount > 0) {
+                    ios.emit('orders', q);
+                    console.log("Order deleted".green);
+                    return res.status(200).json({ error: false, errormessage: "" });
+                } else
+                    return res.status(404).json({ error: true, errormessage: "Invalid order id" });
+            }
+        ).catch(
+            (reason) => {
+                return next({ statusCode: 404, error: true, errormessage: "DB error: " + reason });
+            }
+        );
+    } else
+        return next({ statusCode: 404, error: true, errormessage: "Insufficient credentials to access the feature" });
 });
 
 /*
@@ -236,70 +248,78 @@ app.delete('/orders/:id', auth, (req, res, next) => {
 */
 
 app.get('/users/:username?', auth, (req, res, next) => {
-    if (req.params.username) {
-        let usrn = req.params.username;
+    if (req.auth.role == 4 || req.auth.role == 5) {
+        if (req.params.username) {
+            let usrn = req.params.username;
 
-        user.getModel().findOne( { _id: usrn } ).then(
-            (result) => {
-                return res.status(200).json( result );
+            user.getModel().findOne({ _id: usrn }).then(
+                (result) => {
+                    return res.status(200).json(result);
+                }
+            ).catch(
+                (reason) => {
+                    return next({ statusCode: 404, error: true, errormessage: "DB error: " + reason });
+                }
+            );
+        } else {
+            let skip = parseInt(req.query.skip as string || "0") || 0;
+            let limit = parseInt(req.query.limit as string || "20") || 20;
+
+            user.getModel().find({}).sort({ timestamp: -1 }).skip(skip).limit(limit).then(
+                (documents) => { return res.status(200).json(documents); }
+            ).catch(
+                (reason) => { return next({ statusCode: 404, error: true, errormessage: "DB error: " + reason }); }
+            );
+        }
+    } else
+        return next({ statusCode: 404, error: true, errormessage: "Insufficient credentials to access the feature" });
+});
+
+app.post('/users', auth, (req, res, next) => {
+    if (req.auth.role == 4 || req.auth.role == 5) {
+        let u = user.newUser(req.body);
+
+        if (!req.body.password) {
+            return next({ statusCode: 404, error: true, errormessage: "Password field missing" });
+        }
+
+        u.setPassword(req.body.password);
+
+        u.save().then(
+            (data) => {
+                ios.emit('users', data);
+                console.log("User added to the db".green);
+                return res.status(200).json({ error: false, errormessage: "", id: data._id })
             }
         ).catch(
             (reason) => {
-                return next({ statusCode:404, error: true, errormessage: "DB error: "+reason });
+                return next({ statusCode: 404, error: true, errormessage: "DB error: " + reason.errmsg });
             }
         );
-    } else {
-        let skip = parseInt( req.query.skip as string || "0" ) || 0;
-        let limit = parseInt( req.query.limit as string || "20" ) || 20;
-
-        user.getModel().find( { } ).sort({timestamp:-1}).skip( skip ).limit( limit ).then( 
-            (documents) => { return res.status(200).json( documents ); }
-        ).catch( 
-            (reason) => { return next({ statusCode:404, error: true, errormessage: "DB error: "+reason }); }
-        );
-    }
-    
-});
-
-app.post('/users', (req, res, next) => {
-    let u = user.newUser(req.body);
-
-    if( !req.body.password ) {
-        return next({ statusCode:404, error: true, errormessage: "Password field missing"} );
-    }
-
-    u.setPassword(req.body.password);
-
-    u.save().then(
-        (data) => {
-            ios.emit('users', data);
-            console.log("User added to the db".green);
-            return res.status(200).json({error: false, errormessage: "", id: data._id})
-        }
-    ).catch(
-        (reason) => {
-            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason.errmsg });
-        }
-    );
+    } else
+        return next({ statusCode: 404, error: true, errormessage: "Insufficient credentials to access the feature" });
 });
 
 app.delete('/users/:username', auth, (req, res, next) => {
-    let usrn = req.params.username;
+    if (req.auth.role == 4 || req.auth.role == 5) {
+        let usrn = req.params.username;
 
-    user.getModel().deleteOne({_id: usrn}).then(
-        ( q ) => {
-            if( q.deletedCount > 0 ) {
-                ios.emit('users', q);
-                console.log("User removed from the system".green);
-                return res.status(200).json( {error:false, errormessage:""} );
-            } else 
-                return res.status(404).json( {error:true, errormessage:"Invalid username"} );
-        }
-    ).catch( 
-        (reason)=> {
-            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason });
-        }
-    );
+        user.getModel().deleteOne({ _id: usrn }).then(
+            (q) => {
+                if (q.deletedCount > 0) {
+                    ios.emit('users', q);
+                    console.log("User removed from the system".green);
+                    return res.status(200).json({ error: false, errormessage: "" });
+                } else
+                    return res.status(404).json({ error: true, errormessage: "Invalid username" });
+            }
+        ).catch(
+            (reason) => {
+                return next({ statusCode: 404, error: true, errormessage: "DB error: " + reason });
+            }
+        );
+    } else
+        return next({ statusCode: 404, error: true, errormessage: "Insufficient credentials to access the feature" });
 });
 
 /*
@@ -316,63 +336,68 @@ app.delete('/users/:username', auth, (req, res, next) => {
 app.get('/dishes/:id?', auth, (req, res, next) => {
     if (req.params.id) {
         let id = req.params.id;
-        dish.getModel().findOne( {_id: id } ).then(
-            (result) => { return res.status(200).json( result ); }
-        ).catch( 
-            (reason) => { return next({ statusCode:404, error: true, errormessage: "DB error: "+reason }); }
+        dish.getModel().findOne({ _id: id }).then(
+            (result) => { return res.status(200).json(result); }
+        ).catch(
+            (reason) => { return next({ statusCode: 404, error: true, errormessage: "DB error: " + reason }); }
         )
     } else {
         let category;
         if (req.query.category) category = req.query.category;
-        
-        let skip = parseInt( req.query.skip as string || "0" ) || 0;
-        let limit = parseInt( req.query.limit as string || "20" ) || 20;
-        
-        dish.getModel().find( (category) ? { menuCategory: category } : { } ).limit(limit).skip(skip).then(
-            (result) => { return res.status(200).json( result ); }
-        ).catch( 
-            (reason) => { return next({ statusCode:404, error: true, errormessage: "DB error: "+reason }); }
+
+        let skip = parseInt(req.query.skip as string || "0") || 0;
+        let limit = parseInt(req.query.limit as string || "20") || 20;
+
+        dish.getModel().find((category) ? { menuCategory: category } : {}).limit(limit).skip(skip).then(
+            (result) => { return res.status(200).json(result); }
+        ).catch(
+            (reason) => { return next({ statusCode: 404, error: true, errormessage: "DB error: " + reason }); }
         )
     }
 });
 
 app.post('/dishes', auth, (req, res, next) => {
+    if (req.auth.role == 4 || req.auth.role == 5) {
+        if (dish.isDish(req.body)) {
+            let new_dish = dish.newDish(req.body);
 
-    if (dish.isDish(req.body)) {
-        let new_dish = dish.newDish(req.body);
-
-        new_dish.save().then(
-            (data) => {
-                ios.emit('dishes', data );
-                console.log("Dish added to the db".green);
-                return res.status(200).json({error: false, errormessage: "", id: data._id})
-            }
-        ).catch(
-            (reason) => {
-                return next({ statusCode:404, error: true, errormessage: "DB error: "+reason.errmsg });
-            }
-        );
+            new_dish.save().then(
+                (data) => {
+                    ios.emit('dishes', data);
+                    console.log("Dish added to the db".green);
+                    return res.status(200).json({ error: false, errormessage: "", id: data._id })
+                }
+            ).catch(
+                (reason) => {
+                    return next({ statusCode: 404, error: true, errormessage: "DB error: " + reason.errmsg });
+                }
+            );
+        } else
+            return next({ statusCode: 404, error: true, errormessage: "Data is not a valid Dish" });
     } else
-        return next({ statusCode:404, error: true, errormessage: "Data is not a valid Dish" });
+        return next({ statusCode: 404, error: true, errormessage: "Insufficient credentials to access the feature" });
 });
 
 app.delete('/dishes/:id', auth, (req, res, next) => {
-    let id = req.params.id;
+    if (req.auth.role == 4 || req.auth.role == 5) {
+        let id = req.params.id;
 
-    dish.getModel().deleteOne( {_id: id } ).then( 
-        ( q ) => {
-          if( q.deletedCount > 0 ) {
-            ios.emit('dishes', q );
-            return res.status(200).json( {error:false, errormessage:""} );
-          }
-          else 
-            return res.status(404).json( {error:true, errormessage:"Invalid dish ID"} );
-        }
-    ).catch( 
-        (reason)=> {
-            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason });
-        }
-    )
+        dish.getModel().deleteOne({ _id: id }).then(
+            (q) => {
+                if (q.deletedCount > 0) {
+                    ios.emit('dishes', q);
+                    return res.status(200).json({ error: false, errormessage: "" });
+                }
+                else
+                    return res.status(404).json({ error: true, errormessage: "Invalid dish ID" });
+            }
+        ).catch(
+            (reason) => {
+                return next({ statusCode: 404, error: true, errormessage: "DB error: " + reason });
+            }
+        )
+    } else
+        return next({ statusCode: 404, error: true, errormessage: "Insufficient credentials to access the feature" });
 });
 
 
@@ -390,63 +415,69 @@ app.delete('/dishes/:id', auth, (req, res, next) => {
 app.get('/drinks/:id?', auth, (req, res, next) => {
     if (req.params.id) {
         let id = req.params.id;
-        
-        drink.getModel().findOne( {_id: id } ).then(
-            (result) => { return res.status(200).json( result ); }
-        ).catch( 
-            (reason) => { return next({ statusCode:404, error: true, errormessage: "DB error: "+reason }); }
+
+        drink.getModel().findOne({ _id: id }).then(
+            (result) => { return res.status(200).json(result); }
+        ).catch(
+            (reason) => { return next({ statusCode: 404, error: true, errormessage: "DB error: " + reason }); }
         )
     } else {
         let category;
         if (req.query.category) category = req.query.category;
-        
-        let skip = parseInt( req.query.skip as string || "0" ) || 0;
-        let limit = parseInt( req.query.limit as string || "20" ) || 20;
-        
-        drink.getModel().find( (category) ? { menuCategory: category } : { } ).limit(limit).skip(skip).then(
-            (result) => { return res.status(200).json( result ); }
-        ).catch( 
-            (reason) => { return next({ statusCode:404, error: true, errormessage: "DB error: "+reason }); }
+
+        let skip = parseInt(req.query.skip as string || "0") || 0;
+        let limit = parseInt(req.query.limit as string || "20") || 20;
+
+        drink.getModel().find((category) ? { menuCategory: category } : {}).limit(limit).skip(skip).then(
+            (result) => { return res.status(200).json(result); }
+        ).catch(
+            (reason) => { return next({ statusCode: 404, error: true, errormessage: "DB error: " + reason }); }
         )
     }
 });
 
 app.post('/drinks', auth, (req, res, next) => {
-    if (drink.isDrink(req.body)) {
-        let new_drink = drink.newDrink(req.body);
+    if (req.auth.role == 4 || req.auth.role == 5) {
+        if (drink.isDrink(req.body)) {
+            let new_drink = drink.newDrink(req.body);
 
-        new_drink.save().then(
-            (data) => {
-                ios.emit('drinks', data );
-                console.log("Drink added to the db".green);
-                return res.status(200).json({error: false, errormessage: "", id: data._id})
-            }
-        ).catch(
-            (reason) => {
-                return next({ statusCode:404, error: true, errormessage: "DB error: "+reason.errmsg });
-            }
-        );
+            new_drink.save().then(
+                (data) => {
+                    ios.emit('drinks', data);
+                    console.log("Drink added to the db".green);
+                    return res.status(200).json({ error: false, errormessage: "", id: data._id })
+                }
+            ).catch(
+                (reason) => {
+                    return next({ statusCode: 404, error: true, errormessage: "DB error: " + reason.errmsg });
+                }
+            );
+        } else
+            return next({ statusCode: 404, error: true, errormessage: "Data is not a valid Drink" });
     } else
-        return next({ statusCode:404, error: true, errormessage: "Data is not a valid Drink" });
+        return next({ statusCode: 404, error: true, errormessage: "Insufficient credentials to access the feature" });
 });
 
 app.delete('/drinks/:id', auth, (req, res, next) => {
-    let id = req.params.id;
+    if (req.auth.role == 4 || req.auth.role == 5) {
+        let id = req.params.id;
 
-    drink.getModel().deleteOne( {_id: id } ).then( 
-        ( q ) => {
-          if( q.deletedCount > 0 ) {
-            ios.emit('drinks', q );
-            return res.status(200).json( {error:false, errormessage:""} );
-          }
-          else 
-            return res.status(404).json( {error:true, errormessage:"Invalid drink ID"} );
-        }
-    ).catch( 
-        (reason)=> {
-            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason });
-        }
-    )
+        drink.getModel().deleteOne({ _id: id }).then(
+            (q) => {
+                if (q.deletedCount > 0) {
+                    ios.emit('drinks', q);
+                    return res.status(200).json({ error: false, errormessage: "" });
+                }
+                else
+                    return res.status(404).json({ error: true, errormessage: "Invalid drink ID" });
+            }
+        ).catch(
+            (reason) => {
+                return next({ statusCode: 404, error: true, errormessage: "DB error: " + reason });
+            }
+        )
+    } else
+        return next({ statusCode: 404, error: true, errormessage: "Insufficient credentials to access the feature" });
 });
 
 
@@ -464,78 +495,88 @@ app.delete('/drinks/:id', auth, (req, res, next) => {
 app.get('/tables/:id?', auth, (req, res, next) => {
     if (req.params.id) {
         let id = req.params.id;
-        
-        table.getModel().findOne( {_id: id } ).then(
-            (result) => { return res.status(200).json( result ); }
+
+        table.getModel().findOne({ _id: id }).then(
+            (result) => { return res.status(200).json(result); }
         ).catch(
-            (reason) => { return next({ statusCode:404, error: true, errormessage: "DB error: "+reason }); }
+            (reason) => { return next({ statusCode: 404, error: true, errormessage: "DB error: " + reason }); }
         )
     } else {
         let tableseats;
         if (req.query.seats) tableseats = req.query.seats;
 
-        let skip = parseInt( req.query.skip as string || "0" ) || 0;
-        let limit = parseInt( req.query.limit as string || "20" ) || 20;
-        
-        table.getModel().find( (tableseats) ? { seats: tableseats } : { } ).limit(limit).skip(skip).then(
-            (result) => { return res.status(200).json( result ); }
-        ).catch( 
-            (reason) => { return next({ statusCode:404, error: true, errormessage: "DB error: "+reason }); }
+        let skip = parseInt(req.query.skip as string || "0") || 0;
+        let limit = parseInt(req.query.limit as string || "20") || 20;
+
+        table.getModel().find((tableseats) ? { seats: tableseats } : {}).limit(limit).skip(skip).then(
+            (result) => { return res.status(200).json(result); }
+        ).catch(
+            (reason) => { return next({ statusCode: 404, error: true, errormessage: "DB error: " + reason }); }
         )
     }
 });
 
 app.post('/tables', auth, (req, res, next) => {
-    if (table.isTable(req.body)) {
-        let new_table = table.newTable(req.body);
+    if (req.auth.role == 4 || req.auth.role == 5) {
+        if (table.isTable(req.body)) {
+            let new_table = table.newTable(req.body);
 
-        new_table.save().then(
-            (data) => {
-                ios.emit('tables', data);
-                console.log("Table added to the db".green);
-                return res.status(200).json({error: false, errormessage: "", id: data._id})
-            }
-        ).catch(
-            (reason) => {
-                return next({ statusCode:404, error: true, errormessage: "DB error: "+reason.errmsg });
-            }
-        );
+            new_table.save().then(
+                (data) => {
+                    ios.emit('tables', data);
+                    console.log("Table added to the db".green);
+                    return res.status(200).json({ error: false, errormessage: "", id: data._id })
+                }
+            ).catch(
+                (reason) => {
+                    return next({ statusCode: 404, error: true, errormessage: "DB error: " + reason.errmsg });
+                }
+            );
+        } else
+            return next({ statusCode: 404, error: true, errormessage: "Data is not a valid Table" });
     } else
-        return next({ statusCode:404, error: true, errormessage: "Data is not a valid Table" });
+        return next({ statusCode: 404, error: true, errormessage: "Insufficient credentials to access the feature" });
 });
 
 app.put('/tables/:id/occupied', auth, (req, res, next) => {
-    let id = req.params.id;
+    if (req.auth.role == 1) {
+        let id = req.params.id;
 
-    table.getModel().updateOne( { _id: id }, req.body ).then(
-        (data) => {
-            console.log("Tables status modified".green);
-            return res.status(200).json( { error: false, errormessage: "", elements_modified: data.matchedCount} );
-        }
-    ).catch(
-        (reason) => {
-            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason });
-        }
-    )
+        table.getModel().updateOne({ _id: id }, req.body).then(
+            (data) => {
+                ios.emit('tables', data);
+                console.log("Tables status modified".green);
+                return res.status(200).json({ error: false, errormessage: "", elements_modified: data.matchedCount });
+            }
+        ).catch(
+            (reason) => {
+                return next({ statusCode: 404, error: true, errormessage: "DB error: " + reason });
+            }
+        )
+    } else
+        return next({ statusCode: 404, error: true, errormessage: "Insufficient credentials to access the feature" });
 });
 
 
 app.delete('/tables/:id', auth, (req, res, next) => {
-    let id = req.params.id;
+    if (req.auth.role == 4 || req.auth.role == 5) {
+        let id = req.params.id;
 
-    table.getModel().deleteOne( {_id: id } ).then( 
-        ( q ) => {
-          if( q.deletedCount > 0 ) 
-            return res.status(200).json( {error:false, errormessage:""} );
-
-          else 
-            return res.status(404).json( {error:true, errormessage:"Invalid table ID"} );
-        }
-    ).catch( 
-        (reason)=> {
-            return next({ statusCode:404, error: true, errormessage: "DB error: "+reason });
-        }
-    )
+        table.getModel().deleteOne({ _id: id }).then(
+            (q) => {
+                if (q.deletedCount > 0) {
+                    ios.emit('tables', q);
+                    return res.status(200).json({ error: false, errormessage: "" });
+                } else
+                    return res.status(404).json({ error: true, errormessage: "Invalid table ID" });
+            }
+        ).catch(
+            (reason) => {
+                return next({ statusCode: 404, error: true, errormessage: "DB error: " + reason });
+            }
+        )
+    } else
+        return next({ statusCode: 404, error: true, errormessage: "Insufficient credentials to access the feature" });
 });
 
 
@@ -548,10 +589,11 @@ declare global {
             birthday: Date,
             role: user.Roles
         }
-        
+
         interface Request {
             auth: {
                 _id: string;
+                role: user.Roles;
             }
         }
     }
@@ -560,25 +602,25 @@ declare global {
 
 // Configure HTTP basic authentication strategy trough passport middleware.
 
-passport.use( new passportHTTP.BasicStrategy(
-    function(usrn, password, done) {
+passport.use(new passportHTTP.BasicStrategy(
+    function (usrn, password, done) {
         console.log("New login attempt from " + usrn);
-        
-        user.getModel().find( { _id: usrn }).then(
+
+        user.getModel().find({ _id: usrn }).then(
             (response) => {
-                if (!response[0]) return done(null,false,{statusCode: 500, error: true, errormessage:"Invalid user"});
-                
+                if (!response[0]) return done(null, false, { statusCode: 500, error: true, errormessage: "Invalid user" });
+
                 let user = response[0];
 
                 if (user.checkPassword(password)) {
                     return done(null, user);
                 }
 
-                return done(null,false,{statusCode: 500, error: true, errormessage:"Invalid password"});
+                return done(null, false, { statusCode: 500, error: true, errormessage: "Invalid password" });
             }
         ).catch(
             (reason) => {
-                return done(null, false, { statusCode:404, error: true, errormessage: "DB error: "+reason });
+                return done(null, false, { statusCode: 404, error: true, errormessage: "DB error: " + reason });
             }
         );
     }
@@ -586,8 +628,8 @@ passport.use( new passportHTTP.BasicStrategy(
 
 // Login endpoint uses passport middleware to check
 // user credentials before generating a new JWT
-app.get("/login", passport.authenticate('basic', { session: false }), (req,res) => {
-  
+app.get("/login", passport.authenticate('basic', { session: false }), (req, res) => {
+
     let tokendata = {
         birthday: req.user.birthday,
         name: req.user.name,
@@ -595,25 +637,25 @@ app.get("/login", passport.authenticate('basic', { session: false }), (req,res) 
         role: req.user.role,
         _id: req.user._id
     };
-  
-    console.log("Login granted. Generating token...".green );
-    let token_signed = jsonwebtoken.sign(tokendata, process.env.JWT_SECRET, { expiresIn: '1h' } );
-  
+
+    console.log("Login granted. Generating token...".green);
+    let token_signed = jsonwebtoken.sign(tokendata, process.env.JWT_SECRET, { expiresIn: '1h' });
+
     return res.status(200).json({ error: false, errormessage: "", token: token_signed });
 });
 
 // Add error handling middleware
-app.use( function(err, _1, res, _2) {
+app.use(function (err, _1, res, _2) {
     console.log("Request error: ".red + JSON.stringify(err));
-    res.status( err.statusCode || 500 ).json( err );
+    res.status(err.statusCode || 500).json(err);
 });
 
 // The very last middleware will report an error 404 
 // (will be eventually reached if no error occurred and if
 //  the requested endpoint is not matched by any route)
 //
-app.use( (_, res, next) => {
-    res.status(404).json({statusCode:404, error:true, errormessage: "Invalid endpoint"} );
+app.use((_, res, next) => {
+    res.status(404).json({ statusCode: 404, error: true, errormessage: "Invalid endpoint" });
 });
 
 
@@ -624,97 +666,102 @@ app.use( (_, res, next) => {
 */
 // Connect to mongodb and launch the HTTP server trough Express
 //
-mongoose.connect( 'mongodb://mymongo:27017/restaurant_manager' )
-.then( 
-    () => {
-        console.log("Connected to MongoDB".green);
-        return user.getModel().findOne( {_id:"admin"} );
-    }
-).then(
-    (doc) => {
-        if (!doc) {
-            console.log("Creating admin user");
+mongoose.connect('mongodb://mymongo:27017/restaurant_manager')
+    .then(
+        () => {
+            console.log("Connected to MongoDB".green);
+            return user.getModel().findOne({ _id: "admin" });
+        }
+    ).then(
+        (doc) => {
+            if (!doc) {
+                console.log("Creating admin user");
 
-            let u = user.newUser({
-                _id: "admin",
-                mail: "admin@restaurantmanager.it",
-                name: "Administrator",
-                surname: "",
-                birthday: null
+                let u = user.newUser({
+                    _id: "admin",
+                    mail: "admin@restaurantmanager.it",
+                    name: "Administrator",
+                    surname: "",
+                    birthday: null
+                });
+
+                u.setRole(user.Roles.Admin);
+                u.setPassword("adminpwd");
+                return u.save();
+            }
+        }
+    ).then(    // Check if exists some dishes, drinks and tables inside the db
+        () => {
+            return dish.getModel().countDocuments({});
+        }
+    ).then(
+        (info) => {
+            if (info == 0) {
+                console.log("Adding some dishes into the database");
+                let d1 = dish.getModel().create({ name: "Rigatoni Amatriciana", ingredients: ["Rigatoni", "Tomato sauce", "Bacon", "Basil"], recipe: "Weigh the pasta, bring the water to the boil, cook the pasta, mix the pasta with the sauce and oil to taste", cookingTime: 20, price: 6.99, menuCategory: "FIRST COURSE" });
+                let d2 = dish.getModel().create({ name: "Spaghetti Bolognese", ingredients: ["Spaghetti", "Tomato sauce", "Meat", "Basil", "Carrots", "Onion"], recipe: "Weigh the pasta, bring the water to the boil, cook the pasta, mix the pasta with the meat sauce and add some tomatoes", cookingTime: 20, price: 7.99, menuCategory: "FIRST COURSE" });
+                let d3 = dish.getModel().create({ name: "Cut of Meat", ingredients: ["Beef", "Cherry tomatoes", "Rocket", "Olive oil"], cookingTime: 25, price: 14.99, menuCategory: "SECOND COURSE" });
+                let d4 = dish.getModel().create({ name: "Fish and Chips", ingredients: ["Fish", "Flour", "Frying oil", "French fries"], cookingTime: 15, price: 6, menuCategory: "SECOND COURSE" });
+                let d5 = dish.getModel().create({ name: "Tiramisù", ingredients: ["Mascarpone cheese", "Eggs", "Coffee", "Finger biscuits", "Sugar", "Bitter cocoa"], cookingTime: 3, price: 3.50, menuCategory: "SWEETS" });
+                return Promise.all([d1, d2, d3, d4, d5]);
+            }
+        }
+    ).then(
+        () => {
+            return drink.getModel().countDocuments({});
+        }
+    ).then(
+        (info) => {
+            if (info == 0) {
+                console.log("Adding some drinks into the database");
+                let d1 = drink.getModel().create({ name: "Coca Cola", price: 2.50, menuCategory: "BEVERAGES" });
+                let d2 = drink.getModel().create({ name: "Still water", price: 1.50, menuCategory: "BEVERAGES" });
+                let d3 = drink.getModel().create({ name: "Sparkling water", price: 1.50, menuCategory: "BEVERAGES" });
+                let d4 = drink.getModel().create({ name: "Red wine", price: 4.50, menuCategory: "WINES & STRONGDRINKS" });
+                let d5 = drink.getModel().create({ name: "Macchiato", price: 1, menuCategory: "COFFEE" });
+                return Promise.all([d1, d2, d3, d4, d5]);
+            }
+        }
+    ).then(
+        () => {
+            return table.getModel().countDocuments({});
+        }
+    ).then(
+        (info) => {
+            if (info == 0) {
+                console.log("Adding some tables into the database");
+                let t1 = table.getModel().create({ number: 1, seats: 5, occupiedSeats: 0 });
+                let t2 = table.getModel().create({ number: 2, seats: 3, occupiedSeats: 0 });
+                let t3 = table.getModel().create({ number: 3, seats: 2, occupiedSeats: 0 });
+                let t4 = table.getModel().create({ number: 4, seats: 5, occupiedSeats: 0 });
+                let t5 = table.getModel().create({ number: 5, seats: 2, occupiedSeats: 0 });
+                let t6 = table.getModel().create({ number: 6, seats: 2, occupiedSeats: 0 });
+                let t7 = table.getModel().create({ number: 7, seats: 4, occupiedSeats: 0 });
+                let t8 = table.getModel().create({ number: 8, seats: 4, occupiedSeats: 0 });
+                let t9 = table.getModel().create({ number: 9, seats: 4, occupiedSeats: 0 });
+                let t10 = table.getModel().create({ number: 10, seats: 3, occupiedSeats: 0 });
+                return Promise.all([t1, t2, t3, t4, t5, t6, t7, t8, t9, t10]);
+            }
+        }
+    ).then(
+        () => {
+            let server = http.createServer(app);
+
+            ios = io(server, {
+                cors: {
+                    origin: "http://localhost:4200",
+                    credentials: true
+                }
+            });
+            ios.on('connection', function (client) {
+                console.log("Socket.io client connected".green);
             });
 
-            u.setRole(user.Roles.Admin);
-            u.setPassword("adminpwd");
-            return u.save();
+            server.listen(process.env.PORT, () => console.log(("HTTP Server started on port " + process.env.PORT).green));
         }
-    }
-).then(    // Check if exists some dishes, drinks and tables inside the db
-    () => {
-        return dish.getModel().countDocuments({});
-    }
-).then(
-    (info) => {
-        if (info == 0) {
-            console.log("Adding some dishes into the database");
-            let d1 = dish.getModel().create({name: "Rigatoni Amatriciana", ingredients: ["Rigatoni", "Tomato sauce", "Bacon", "Basil"], recipe: "Weigh the pasta, bring the water to the boil, cook the pasta, mix the pasta with the sauce and oil to taste", cookingTime: 20, price: 6.99, menuCategory: "FIRST COURSE"});
-            let d2 = dish.getModel().create({name: "Spaghetti Bolognese", ingredients: ["Spaghetti", "Tomato sauce", "Meat", "Basil", "Carrots", "Onion"], recipe: "Weigh the pasta, bring the water to the boil, cook the pasta, mix the pasta with the meat sauce and add some tomatoes", cookingTime: 20, price: 7.99, menuCategory: "FIRST COURSE"});
-            let d3 = dish.getModel().create({name: "Cut of Meat", ingredients: ["Beef", "Cherry tomatoes", "Rocket", "Olive oil"], cookingTime: 25, price: 14.99, menuCategory: "SECOND COURSE"});
-            let d4 = dish.getModel().create({name: "Fish and Chips", ingredients: ["Fish", "Flour", "Frying oil", "French fries"], cookingTime: 15, price: 6, menuCategory: "SECOND COURSE"});
-            let d5 = dish.getModel().create({name: "Tiramisù", ingredients: ["Mascarpone cheese", "Eggs", "Coffee", "Finger biscuits", "Sugar", "Bitter cocoa"], cookingTime: 3, price: 3.50, menuCategory: "SWEETS"});
-            return Promise.all([d1, d2, d3, d4, d5]);
+    ).catch(
+        (err) => {
+            console.log("Error Occurred during initialization".red);
+            console.log(err);
         }
-    }
-).then(
-    () => {
-        return drink.getModel().countDocuments({});
-    }
-).then(
-    (info) => {
-        if (info == 0) {
-            console.log("Adding some drinks into the database");
-            let d1 = drink.getModel().create({name: "Coca Cola", price: 2.50, menuCategory: "BEVERAGES"});
-            let d2 = drink.getModel().create({name: "Still water", price: 1.50, menuCategory: "BEVERAGES"});
-            let d3 = drink.getModel().create({name: "Sparkling water", price: 1.50, menuCategory: "BEVERAGES"});
-            let d4 = drink.getModel().create({name: "Red wine", price: 4.50, menuCategory: "WINES & STRONGDRINKS"});
-            let d5 = drink.getModel().create({name: "Macchiato", price: 1, menuCategory: "COFFEE"});
-            return Promise.all([d1, d2, d3, d4, d5]);
-        }
-    }
-).then(
-    () => {
-        return table.getModel().countDocuments({});
-    }
-).then(
-    (info) => {
-        if (info == 0) {
-            console.log("Adding some tables into the database");
-            let t1 = table.getModel().create( { number: 1, seats: 5, occupiedSeats: 0 });
-            let t2 = table.getModel().create( { number: 2, seats: 3, occupiedSeats: 0 });
-            let t3 = table.getModel().create( { number: 3, seats: 2, occupiedSeats: 0 });
-            let t4 = table.getModel().create( { number: 4, seats: 5, occupiedSeats: 0 });
-            let t5 = table.getModel().create( { number: 5, seats: 2, occupiedSeats: 0 });
-            let t6 = table.getModel().create( { number: 6, seats: 2, occupiedSeats: 0 });
-            let t7 = table.getModel().create( { number: 7, seats: 4, occupiedSeats: 0 });
-            let t8 = table.getModel().create( { number: 8, seats: 4, occupiedSeats: 0 });
-            let t9 = table.getModel().create( { number: 9, seats: 4, occupiedSeats: 0 });
-            let t10 = table.getModel().create( { number: 10, seats: 3, occupiedSeats: 0 });
-            return Promise.all([t1, t2, t3, t4, t5, t6, t7, t8, t9, t10]);
-        }
-    }
-).then(      
-    () => {
-        let server = http.createServer(app);
-
-        ios = io(server)
-        ios.on('connection', function (client) {
-            console.log("Socket.io client connected".green);
-        });
-
-        server.listen(process.env.PORT, () => console.log(("HTTP Server started on port " + process.env.PORT).green));
-    }
-).catch(
-    (err) => {
-        console.log("Error Occurred during initialization".red );
-        console.log(err);
-    }
-);
+    );
