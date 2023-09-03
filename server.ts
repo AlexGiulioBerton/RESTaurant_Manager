@@ -153,7 +153,7 @@ app.get('/orders/:id?', auth, (req, res, next) => {
 });
 
 app.post('/orders', auth, (req, res, next) => {
-    if (req.auth.role == 1) {
+    if (req.auth.role == user.Roles.Waiter) {
         if (order.isOrder(req.body)) {
             let o = order.newOrder(req.body);
 
@@ -175,47 +175,39 @@ app.post('/orders', auth, (req, res, next) => {
 });
 
 app.put('/orders/:id/dishstatus', auth, (req, res, next) => {
-    if (req.auth.role == 2 || req.auth.role == 3) {
-        let id = req.params.id;
+    let id = req.params.id;
 
-        order.getModel().updateOne({ _id: id }, req.body).then(
-            (data) => {
-                ios.emit('orders', data);
-                console.log("Dishes status modified".green);
-                return res.status(200).json({ error: false, errormessage: "", elements_modified: data.matchedCount });
-            }
-        ).catch(
-            (reason) => {
-                return next({ statusCode: 404, error: true, errormessage: "DB error: " + reason });
-            }
-        )
-    } else
-        return next({ statusCode: 404, error: true, errormessage: "Insufficient credentials to access the feature" });
+    order.getModel().updateOne({ _id: id }, req.body).then(
+        (data) => {
+            ios.emit('orders', data);
+            console.log("Dishes status modified".green);
+            return res.status(200).json({ error: false, errormessage: "", elements_modified: data.matchedCount });
+        }
+    ).catch(
+        (reason) => {
+            return next({ statusCode: 404, error: true, errormessage: "DB error: " + reason });
+        }
+    )
 });
 
 app.put('/orders/:id/drinkstatus', auth, (req, res, next) => {
-    if (req.auth.role == 2 || req.auth.role == 3) {
-        let id = req.params.id;
+    let id = req.params.id;
 
-        console.log(req.body);
-
-        order.getModel().updateOne({ _id: id }, req.body).then(
-            (data) => {
-                ios.emit('orders', data);
-                console.log("Drinks status modified".green);
-                return res.status(200).json({ error: false, errormessage: "", elements_modified: data.matchedCount });
-            }
-        ).catch(
-            (reason) => {
-                return next({ statusCode: 404, error: true, errormessage: "DB error: " + reason });
-            }
-        )
-    } else
-        return next({ statusCode: 404, error: true, errormessage: "Insufficient credentials to access the feature" });
+    order.getModel().updateOne({ _id: id }, req.body).then(
+        (data) => {
+            ios.emit('orders', data);
+            console.log("Drinks status modified".green);
+            return res.status(200).json({ error: false, errormessage: "", elements_modified: data.matchedCount });
+        }
+    ).catch(
+        (reason) => {
+            return next({ statusCode: 404, error: true, errormessage: "DB error: " + reason });
+        }
+    )
 });
 
 app.delete('/orders/:id', auth, (req, res, next) => {
-    if (req.auth.role == 4 || req.auth.role == 5) {
+    if (req.auth.role == user.Roles.Cashier || req.auth.role == user.Roles.Admin) {
         let order_id = req.params.id;
 
         order.getModel().deleteOne({ _id: order_id }).then(
@@ -248,7 +240,7 @@ app.delete('/orders/:id', auth, (req, res, next) => {
 */
 
 app.get('/users/:username?', auth, (req, res, next) => {
-    if (req.auth.role == 4 || req.auth.role == 5) {
+    if (req.auth.role == user.Roles.Cashier || req.auth.role == user.Roles.Admin) {
         if (req.params.username) {
             let usrn = req.params.username;
 
@@ -276,7 +268,7 @@ app.get('/users/:username?', auth, (req, res, next) => {
 });
 
 app.post('/users', auth, (req, res, next) => {
-    if (req.auth.role == 4 || req.auth.role == 5) {
+    if (req.auth.role == user.Roles.Cashier || req.auth.role == user.Roles.Waiter) {
         let u = user.newUser(req.body);
 
         if (!req.body.password) {
@@ -301,7 +293,7 @@ app.post('/users', auth, (req, res, next) => {
 });
 
 app.delete('/users/:username', auth, (req, res, next) => {
-    if (req.auth.role == 4 || req.auth.role == 5) {
+    if (req.auth.role == user.Roles.Cashier || req.auth.role == user.Roles.Admin) {
         let usrn = req.params.username;
 
         user.getModel().deleteOne({ _id: usrn }).then(
@@ -357,7 +349,7 @@ app.get('/dishes/:id?', auth, (req, res, next) => {
 });
 
 app.post('/dishes', auth, (req, res, next) => {
-    if (req.auth.role == 4 || req.auth.role == 5) {
+    if (req.auth.role == user.Roles.Cashier || req.auth.role == user.Roles.Admin) {
         if (dish.isDish(req.body)) {
             let new_dish = dish.newDish(req.body);
 
@@ -437,7 +429,7 @@ app.get('/drinks/:id?', auth, (req, res, next) => {
 });
 
 app.post('/drinks', auth, (req, res, next) => {
-    if (req.auth.role == 4 || req.auth.role == 5) {
+    if (req.auth.role == user.Roles.Cashier || req.auth.role == user.Roles.Admin) {
         if (drink.isDrink(req.body)) {
             let new_drink = drink.newDrink(req.body);
 
@@ -459,7 +451,7 @@ app.post('/drinks', auth, (req, res, next) => {
 });
 
 app.delete('/drinks/:id', auth, (req, res, next) => {
-    if (req.auth.role == 4 || req.auth.role == 5) {
+    if (req.auth.role == user.Roles.Cashier || req.auth.role == user.Roles.Admin) {
         let id = req.params.id;
 
         drink.getModel().deleteOne({ _id: id }).then(
@@ -517,7 +509,7 @@ app.get('/tables/:id?', auth, (req, res, next) => {
 });
 
 app.post('/tables', auth, (req, res, next) => {
-    if (req.auth.role == 4 || req.auth.role == 5) {
+    if (req.auth.role == user.Roles.Cashier || req.auth.role == user.Roles.Admin) {
         if (table.isTable(req.body)) {
             let new_table = table.newTable(req.body);
 
@@ -539,7 +531,7 @@ app.post('/tables', auth, (req, res, next) => {
 });
 
 app.put('/tables/:id/occupied', auth, (req, res, next) => {
-    if (req.auth.role == 1) {
+    if (req.auth.role == user.Roles.Waiter) {
         let id = req.params.id;
 
         table.getModel().updateOne({ _id: id }, req.body).then(
@@ -559,7 +551,7 @@ app.put('/tables/:id/occupied', auth, (req, res, next) => {
 
 
 app.delete('/tables/:id', auth, (req, res, next) => {
-    if (req.auth.role == 4 || req.auth.role == 5) {
+    if (req.auth.role == user.Roles.Cashier || req.auth.role == user.Roles.Admin) {
         let id = req.params.id;
 
         table.getModel().deleteOne({ _id: id }).then(
